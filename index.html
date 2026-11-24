@@ -502,16 +502,91 @@
     }
     await refresh();toast(`Cleaned ${updates.length} track name${updates.length===1?"":"s"}.`);
   }
-  async function findLibraryDuplicates(){
-    if(!tracks.length)return toast("Your library is empty.");
-    const byHash=new Map();tracks.forEach(t=>{if(t.checksum){if(!byHash.has(t.checksum))byHash.set(t.checksum,[]);byHash.get(t.checksum).push(t)}});
-    const groups=[...byHash.values()].filter(g=>g.length>1);
-    toast(groups.length?`Found ${groups.reduce((n,g)=>n+g.length-1,0)} duplicate track(s).`:"No exact duplicates found.");
-    if(groups.length)showDuplicateModal(groups);
+  async function findLibraryDuplicates() {
+  if (!tracks.length) {
+    toast("Your library is empty.");
+    return;
   }
-  function showDuplicateModal(groups){
-    showModal("Duplicate tracks",groups.map(g=>`<div class="upload-meta"><strong>${esc(g[0].title)}</strong><div class="muted">${g.length} identical files</div>${g.map(t=>`<div class="muted">• ${esc(t.title)} — ${esc(t.artist||"Unknown artist")}</div>`).join("")}</div>`).join(""));
+
+  const byHash = new Map();
+
+  for (const track of tracks) {
+    if (!track.checksum) continue;
+
+    if (!byHash.has(track.checksum)) byHash.set(track.checksum, []);
+    byHash.get(track.checksum).push(track);
   }
+
+  const groups = [...byHash.values()].filter(group => group.length > 1);
+
+  if (!groups.length) {
+    toast("No exact duplicate files found.");
+    return;
+  }
+
+  showDuplicateModal(groups);
+}
+
+function showDuplicateModal(groups) {
+  const duplicateCount = groups.reduce((count, group) => count + group.length - 1, 0);
+
+  const groupsHtml = groups.map((group, groupIndex) => `
+    <div class="upload-meta">
+      <strong>Duplicate group ${groupIndex + 1}</strong>
+      <div class="muted">${group.length} identical files · first copy is kept by default</div>
+
+      ${group.map((track, trackIndex) => {
+        const isKeepCopy = trackIndex === 0;
+        return `
+          <label class="choice">
+            <input
+              type="checkbox"
+              name="duplicateTrack"
+              value="${esc(track.id)}"
+              ${isKeepCopy ? "disabled" : "checked"}
+            >
+            <span>
+              <strong>${isKeepCopy ? "KEEP" : "DELETE"}</strong> — ${esc(track.title)}
+              <span class="muted"> · ${esc(track.artist || "Unknown artist")}</span>
+            </span>
+          </label>
+        `;
+      }).join("")}
+    </div>
+  `).join("");
+
+  showModal("Exact duplicate tracks", `
+    <p class="muted">
+      Found ${duplicateCount} extra copy${duplicateCount === 1 ? "" : "ies"}
+      across ${groups.length} group${groups.length === 1 ? "" : "s"}.
+      Checked tracks will be deleted from Storage and your library.
+    </p>
+
+    <div class="choice-list">${groupsHtml}</div>
+
+    <button class="button primary" id="deleteDuplicateTracks" style="width:100%">
+      Delete selected duplicates
+    </button>
+  `);
+
+  $("#deleteDuplicateTracks").onclick = async () => {
+    const ids = $$('input[name="duplicateTrack"]:checked', $("#modalBody"))
+      .map(input => input.value);
+
+    if (!ids.length) {
+      toast("Select at least one duplicate to delete.");
+      return;
+    }
+
+    if (!confirm(`Permanently delete ${ids.length} selected duplicate track${ids.length === 1 ? "" : "s"}?`)) {
+      return;
+    }
+
+    closeModal();
+    await deleteTracks(ids);
+  };
+}
+
   function editTrack(track){
     showModal("Edit track details",`<form id="editForm"><input name="title" value="${esc(track.title)}" required><input name="artist" value="${esc(track.artist||"")}" placeholder="Artist"><input name="album" value="${esc(track.album||"")}" placeholder="Album"><input name="genre" value="${esc(track.genre||"")}" placeholder="Genre"><button class="button primary" style="width:100%;margin-top:12px">Save</button></form>`);
     $("#editForm").onsubmit=async e=>{e.preventDefault();const d=new FormData(e.currentTarget);
