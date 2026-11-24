@@ -134,6 +134,33 @@
     .choice{display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;color:var(--fg2)}
     .choice:hover{background:#7c3aed1f}.choice input{accent-color:var(--p400)}
     footer{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be0;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
+   #modal input[type="text"],
+#modal input[type="email"],
+#modal input[type="password"] {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0;
+  padding: 0 14px;
+  appearance: none;
+  border: 1px solid var(--bdr2);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(3, 2, 10, .88);
+  color: var(--fg);
+  font: 500 16px "Space Grotesk", sans-serif;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, .28);
+}
+
+#modal input::placeholder {
+  color: var(--fg2);
+  opacity: 1;
+}
+
+#modal input:focus {
+  border-color: var(--p300);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .2);
+}
     footer.player.collapsed{transform:translate(-50%,calc(100% - 12px))}
    .player-toggle {
   position: absolute;
@@ -200,7 +227,10 @@
   <main>
     <section class="page active" id="libraryPage">
       <div class="heading">
-        <h1>Library</h1>
+        <div>
+  <h1>Library</h1>
+  <p class="muted" id="libraryCount">0 tracks</p>
+</div>
         <div class="toolbar">
           <label class="search">⌕ <input id="librarySearch" placeholder="Search tracks, artists, albums"></label>
           <button class="button" id="actionsButton">☷ <span>Actions</span></button>
@@ -214,10 +244,11 @@
         <button data-tool="mass-delete">☑ &nbsp; Mass delete</button>
       </div>
       <div class="selection" id="selectionBar" hidden>
-        <span class="count" id="selectionCount">0 selected</span>
-        <button class="button" id="cancelSelection">Cancel</button>
-        <button class="button danger" id="deleteSelected" disabled>Delete selected</button>
-      </div>
+  <span class="count" id="selectionCount">0 selected</span>
+  <button class="button" id="selectAllTracks">Select all</button>
+  <button class="button" id="cancelSelection">Cancel</button>
+  <button class="button danger" id="deleteSelected" disabled>Delete selected</button>
+</div>
       <div class="track-list" id="libraryTracks"></div>
       <div class="muted" id="libraryEmpty" style="padding:25px;text-align:center">Your library is empty. Upload some audio to get started.</div>
     </section>
@@ -234,6 +265,7 @@
           <div><div class="eyebrow">PLAYLIST</div><h2 id="detailName"></h2><div class="muted" id="detailMeta"></div>
             <div class="playlist-actions">
               <button class="button primary" id="playAll">▷ Play all</button>
+              <button class="button" id="shufflePlaylist">⤨ Shuffle</button>
               <button class="button" id="addPlaylistTracks">＋ Add tracks</button>
               <button class="button" id="savePlaylistOffline">⇩ Save offline</button>
               <button class="button" id="sharePlaylist">⌯ Share</button>
@@ -287,10 +319,13 @@
   const audio = $("#audio");
   const isConfigured = SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY !== "null";
   const supabase = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-  let user = null, tracks = [], playlists = [], currentPlaylist = null, currentTrack = null;
-  let queue = [], selectedIds = new Set(), selectionMode = false, uploadQueue = [], duplicateIds = new Set();
-  let toastTimer;
+let user = null, tracks = [], playlists = [], currentPlaylist = null, currentTrack = null;
+let queue = [], selectedIds = new Set(), selectionMode = false, uploadQueue = [];
+let duplicateIds = new Set();
+let duplicatesOnly = false;
+let duplicateScanComplete = false;
+const fileHashCache = new WeakMap();
+let toastTimer;  
 
   function toast(message) {
     const node=$("#toast"); node.textContent=message; node.classList.add("show");
@@ -299,6 +334,39 @@
   function esc(value="") {
     return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
   }
+  function displayDuration(seconds) {
+  return Number(seconds) > 0 ? timeText(Number(seconds)) : "—";
+}
+
+function playlistDurationText(seconds) {
+  if (!seconds) return "duration unavailable";
+
+  const totalMinutes = Math.round(seconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return hours
+    ? `${hours} hr ${minutes} min`
+    : `${totalMinutes} min`;
+}
+
+function readAudioDuration(file) {
+  return new Promise(resolve => {
+    const probe = new Audio();
+    const objectUrl = URL.createObjectURL(file);
+
+    const finish = duration => {
+      URL.revokeObjectURL(objectUrl);
+      probe.removeAttribute("src");
+      resolve(Number.isFinite(duration) && duration > 0 ? duration : 0);
+    };
+
+    probe.preload = "metadata";
+    probe.onloadedmetadata = () => finish(probe.duration);
+    probe.onerror = () => finish(0);
+    probe.src = objectUrl;
+  });
+}
   function timeText(value) {
     if(!Number.isFinite(Number(value))) return "0:00";
     return `${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,"0")}`;
@@ -392,7 +460,7 @@
       row.innerHTML=`
         <div class="art" title="${selectionMode&&mode==="library"?"Select track":"Play track"}">♪</div>
         <div class="track-info" tabindex="0"><div class="track-title">${esc(track.title)}</div><div class="track-artist">${esc(track.artist||"Unknown artist")}</div></div>
-        <div class="duration">${timeText(track.duration)}</div>
+        <div class="duration">${displayDuration(track.duration)}</div>
         <button class="track-control cache" title="${mode==="offline"||cached?"Remove from cache":"Save offline"}">${mode==="offline"||cached?"▣":"⇩"}</button>
         <button class="track-control more" aria-label="Track options">•••</button>
         <div class="more-menu">
@@ -447,18 +515,63 @@
     const p=playlists.find(x=>x.id===currentPlaylist);if(!p)return;
     const list=(p.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);
     $("#detailName").textContent=p.name;
-    $("#detailMeta").textContent=`${list.length} tracks · ${Math.round(list.reduce((n,t)=>n+(t.duration||0),0)/60)} min`;
+   const totalSeconds = list.reduce(
+  (sum, track) => sum + (Number(track.duration) || 0),
+  0
+);
+
+$("#detailMeta").textContent =
+  `${list.length} ${list.length === 1 ? "track" : "tracks"} · ` +
+  playlistDurationText(totalSeconds);
     renderTracks($("#detailTracks"),list,"playlist");$("#playlistEmpty").style.display=list.length?"none":"grid";
   }
   function renderAll(){renderLibrary();renderOffline();renderPlaylists();if(currentPlaylist)renderDetail()}
   function openPlaylist(id){currentPlaylist=id;$("#playlistBrowser").hidden=true;$("#playlistDetail").hidden=false;renderDetail()}
   function closePlaylist(){currentPlaylist=null;$("#playlistBrowser").hidden=false;$("#playlistDetail").hidden=true}
 
-  function updateSelection(){
-    $("#selectionBar").hidden=!selectionMode;
-    $("#selectionCount").textContent=`${selectedIds.size} selected`;
-    $("#deleteSelected").disabled=!selectedIds.size;
+  function updateSelection() {
+  $("#selectionBar").hidden = !selectionMode;
+  $("#selectionCount").textContent = `${selectedIds.size} selected`;
+  $("#deleteSelected").disabled = selectedIds.size === 0;
+
+  const query = $("#librarySearch").value.toLowerCase().trim();
+  const visibleTracks = tracks.filter(track =>
+    `${track.title} ${track.artist} ${track.album || ""}`
+      .toLowerCase()
+      .includes(query)
+  );
+
+  const allVisibleSelected =
+    visibleTracks.length > 0 &&
+    visibleTracks.every(track => selectedIds.has(track.id));
+
+  $("#selectAllTracks").textContent =
+    allVisibleSelected ? "Deselect all" : "Select all";
+
+  $("#libraryCount").textContent =
+    `${tracks.length} ${tracks.length === 1 ? "track" : "tracks"}`;
+}
+
+$("#selectAllTracks").addEventListener("click", () => {
+  const query = $("#librarySearch").value.toLowerCase().trim();
+  const visibleTracks = tracks.filter(track =>
+    `${track.title} ${track.artist} ${track.album || ""}`
+      .toLowerCase()
+      .includes(query)
+  );
+
+  const allSelected =
+    visibleTracks.length > 0 &&
+    visibleTracks.every(track => selectedIds.has(track.id));
+
+  if (allSelected) {
+    visibleTracks.forEach(track => selectedIds.delete(track.id));
+  } else {
+    visibleTracks.forEach(track => selectedIds.add(track.id));
   }
+
+  renderLibrary();
+});
   function toggleSelection(id){selectedIds.has(id)?selectedIds.delete(id):selectedIds.add(id);renderLibrary()}
   function selectionModeOn(on){selectionMode=on;if(!on)selectedIds.clear();renderLibrary()}
 
@@ -620,16 +733,68 @@ function showDuplicateModal(groups) {
           <div class="field"><label>Album</label><input id="uploadAlbum" placeholder="Optional"></div>
           <div class="field"><label>Genre</label><input id="uploadGenre" placeholder="Optional"></div>
         </div>
-        <div class="queue-head"><span id="queueCount">0 FILES QUEUED</span><button class="button" id="findQueueDuplicates">Find duplicates</button><button class="button" id="clearQueue">Clear all</button></div>
-        <div class="queue" id="queueList"></div>
+       <div class="queue-head">
+  <span id="queueCount">0 FILES QUEUED</span>
+  <button class="button" id="findQueueDuplicates">Find duplicates</button>
+  <button class="button" id="toggleDuplicateView" disabled>Show duplicates</button>
+  <button class="button danger" id="removeDuplicateFiles" disabled>Remove duplicates from queue</button>
+  <button class="button" id="clearQueue">Clear all</button>
+</div><div class="queue" id="queueList"></div>
         <div class="upload-meta muted" id="queueSummary"></div>
         <button class="button primary" id="startUpload" style="width:100%;margin-top:13px">Upload selected files</button>
       </div>`,true);
 
-    const addFiles=files=>{
-      for(const file of files)if(isAudio(file)&&!uploadQueue.some(f=>(f.webkitRelativePath||f.name)===(file.webkitRelativePath||file.name)))uploadQueue.push(file);
-      renderUploadQueue();
-    };
+   const addFiles = files => {
+  let added = 0;
+
+  for (const file of files) {
+    if (!isAudio(file)) continue;
+
+    const path = file.webkitRelativePath || file.name;
+    if (uploadQueue.some(existing =>
+      (existing.webkitRelativePath || existing.name) === path
+    )) continue;
+
+    uploadQueue.push(file);
+    added++;
+  }
+
+  if (added) {
+    duplicateIds.clear();
+    duplicateScanComplete = false;
+    duplicatesOnly = false;
+  }
+
+  renderUploadQueue();
+};
+
+$("#clearQueue").onclick = () => {
+  uploadQueue = [];
+  duplicateIds.clear();
+  duplicateScanComplete = false;
+  duplicatesOnly = false;
+  renderUploadQueue();
+};
+
+$("#findQueueDuplicates").onclick = findQueuedDuplicates;
+
+$("#toggleDuplicateView").onclick = () => {
+  duplicatesOnly = !duplicatesOnly;
+  renderUploadQueue();
+};
+
+$("#removeDuplicateFiles").onclick = () => {
+  if (!duplicateIds.size) return;
+
+  uploadQueue = uploadQueue.filter((_, index) => !duplicateIds.has(index));
+  duplicateIds.clear();
+  duplicateScanComplete = false;
+  duplicatesOnly = false;
+  renderUploadQueue();
+  toast("Duplicate files removed from the upload queue.");
+};
+
+$("#startUpload").onclick = uploadQueued;
     $("#dropZone").onclick=()=>$("#audioPicker").click();
     $("#audioPicker").onchange=e=>addFiles([...e.target.files]);
     $("#folderPickerButton").onclick=()=>$("#folderPicker").click();
@@ -669,27 +834,95 @@ function showDuplicateModal(groups) {
       let batch;do{batch=await readBatch();for(const child of batch)await readEntry(child,out)}while(batch.length);
     }
   }
-  async function hashFile(file){
-    const digest=await crypto.subtle.digest("SHA-256",await file.arrayBuffer());
-    return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+ async function hashFile(file) {
+  const cached = fileHashCache.get(file);
+  if (cached) return cached;
+
+  // This uses SHA-256 to match the checksum format already stored in Supabase.
+  // Web Crypto reads one whole file into memory, so very large files can take a while.
+  const hashPromise = file.arrayBuffer()
+    .then(buffer => crypto.subtle.digest("SHA-256", buffer))
+    .then(digest =>
+      [...new Uint8Array(digest)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("")
+    );
+
+  fileHashCache.set(file, hashPromise);
+  return hashPromise;
+}
+ async function findQueuedDuplicates() {
+  if (!uploadQueue.length) {
+    toast("Choose files first.");
+    return;
   }
-  async function findQueuedDuplicates(){
-    if(!uploadQueue.length)return toast("Choose files first.");
-    toast("Checking file hashes…");
-    const hashes=[];
-    for(const file of uploadQueue)hashes.push(await hashFile(file));
-    const existing=await supabase.from("tracks").select("checksum").in("checksum",[...new Set(hashes)]);
-    if(existing.error)return toast(existing.error.message);
-    const known=new Set((existing.data||[]).map(x=>x.checksum));
-    const seen=new Set();duplicateIds.clear();
-    hashes.forEach((hash,i)=>{if(known.has(hash)||seen.has(hash))duplicateIds.add(i);seen.add(hash)});
+
+  const findButton = $("#findQueueDuplicates");
+  findButton.disabled = true;
+  duplicateIds.clear();
+  duplicateScanComplete = false;
+
+  try {
+    const hashes = [];
+
+    for (let index = 0; index < uploadQueue.length; index++) {
+      $("#queueSummary").textContent =
+        `Checking file ${index + 1} of ${uploadQueue.length}…`;
+
+      hashes.push(await hashFile(uploadQueue[index]));
+    }
+
+    // Query in batches to avoid oversized PostgREST requests.
+    const knownHashes = new Set();
+    const uniqueHashes = [...new Set(hashes)];
+
+    for (let start = 0; start < uniqueHashes.length; start += 100) {
+      const batch = uniqueHashes.slice(start, start + 100);
+      const { data, error } = await supabase
+        .from("tracks")
+        .select("checksum")
+        .in("checksum", batch);
+
+      if (error) throw error;
+      (data || []).forEach(row => knownHashes.add(row.checksum));
+    }
+
+    // Flag files already in the library and repeated files within this queue.
+    const seenInQueue = new Set();
+
+    hashes.forEach((hash, index) => {
+      if (knownHashes.has(hash) || seenInQueue.has(hash)) {
+        duplicateIds.add(index);
+      }
+      seenInQueue.add(hash);
+    });
+
+    duplicateScanComplete = true;
+    duplicatesOnly = duplicateIds.size > 0;
     renderUploadQueue();
-    toast(`${duplicateIds.size} duplicate file(s) found.`);
+
+    toast(
+      duplicateIds.size
+        ? `Found ${duplicateIds.size} duplicate file(s). Showing them in the queue.`
+        : "No duplicates found."
+    );
+  } catch (error) {
+    console.error("Duplicate scan failed:", error);
+    toast(`Duplicate scan failed: ${error.message}`);
+  } finally {
+    findButton.disabled = false;
+    findButton.textContent = "Find duplicates";
   }
+}
   function cleanFileTitle(name){return name.replace(/\.[^.]+$/,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim()}
   async function uploadQueued(){
     if(!uploadQueue.length)return;
-    const files=[...uploadQueue],skip=new Set(duplicateIds);
+  if (!duplicateScanComplete) {
+  await findQueuedDuplicates();
+}
+
+const files = [...uploadQueue];
+const skip = new Set(duplicateIds);
     const bytes=files.reduce((n,f,i)=>n+(skip.has(i)?0:f.size),0);
     if(bytes>MAX_FREE_STORAGE_BYTES)return toast("This batch exceeds the 1 GB free-storage limit.");
     if(!await requireUser())return;
@@ -700,9 +933,8 @@ function showDuplicateModal(groups) {
     const uploaded=[],errors=[];
     for(let i=0;i<files.length;i++){
       if(skip.has(i))continue;
-      const file=files[i],checksum=await hashFile(file);
-      const {data:exists}=await supabase.from("tracks").select("id").eq("checksum",checksum).limit(1);
-      if(exists?.length){skip.add(i);continue}
+   const file = files[i];
+const checksum = await hashFile(file);
       const ext=(file.name.match(/\.([a-z0-9]{2,8})$/i)||[])[1]||"audio";
       const storagePath=`${user.id}/${crypto.randomUUID()}.${ext.toLowerCase()}`;
       const upload=await supabase.storage.from(BUCKET).upload(storagePath,file,{contentType:file.type||"application/octet-stream",upsert:false});
