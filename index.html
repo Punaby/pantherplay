@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PantherPlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --p700:#1a0a40;--p600:#2d1070;--p500:#4a1fa8;--p400:#7c3aed;--p300:#a78bfa;--p200:#c4b5fd;
+      --black:#03020a;--surf:#0a0720;--surf2:#110e2e;--surf3:#191540;
+      --fg:#f0ebff;--fg2:#a89bc8;--fg3:#6b5f88;
+      --bdr:rgba(124,58,237,.20);--bdr2:rgba(124,58,237,.40);
+      --star1:rgba(255,255,255,.95);--star2:rgba(196,181,253,.85);
+      --neb1:rgba(124,24,184,.45);--neb2:rgba(124,24,184,.55);
+      --danger:#ff6488;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:"Space Grotesk",sans-serif;background:var(--black);color:var(--fg);min-height:100vh;line-height:1.55;position:relative;overflow-x:hidden}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+      radial-gradient(2px 2px at 8% 18%,var(--star1),transparent),
+      radial-gradient(3.5px 3.5px at 81% 48%,var(--star2),transparent),
+      radial-gradient(2.5px 2.5px at 14% 69%,var(--star1),transparent),
+      radial-gradient(2px 2px at 47% 22%,var(--star2),transparent),
+      radial-gradient(3px 3px at 69% 88%,var(--star1),transparent),
+      radial-gradient(2px 2px at 92% 14%,var(--star2),transparent),
+      radial-gradient(3.5px 3.5px at 31% 74%,var(--star1),transparent),
+      radial-gradient(2px 2px at 58% 51%,var(--star2),transparent),
+      radial-gradient(2.5px 2.5px at 74% 33%,var(--star1),transparent),
+      radial-gradient(2px 2px at 3% 91%,var(--star2),transparent),
+      radial-gradient(3px 3px at 50% 95%,var(--star1),transparent),
+      radial-gradient(2.5px 2.5px at 96% 62%,var(--star2),transparent)}
+    body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+      radial-gradient(ellipse 70% 50% at 50% 50%,var(--neb1),transparent),
+      radial-gradient(ellipse 55% 55% at 50% 45%,var(--neb2),transparent),
+      radial-gradient(ellipse 40% 40% at 50% 50%,rgba(67,12,184,.35),transparent)}
+    button,input{font:inherit}
+    button{color:inherit;cursor:pointer}
+    button:focus-visible,input:focus-visible{outline:2px solid var(--p300);outline-offset:3px}
+    .app{position:relative;z-index:1;max-width:1450px;margin:auto;padding:20px 30px 135px}
+    header,main,footer{position:relative;z-index:1}
+    .topbar{position:sticky;top:12px;z-index:20;width:min(1160px,100%);min-height:76px;margin:auto;padding:10px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border:1px solid rgba(220,205,255,.2);border-radius:999px;background:rgba(36,18,70,.38);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 12px 40px #0005}
+    .brand{display:flex;align-items:center;gap:12px;color:var(--fg);text-decoration:none;font-size:20px;font-weight:700}
+    .brand-mark{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#392078,#171033);box-shadow:0 0 26px #7c3aed44;font-size:24px}
+    .nav{display:flex;align-items:center;gap:4px;padding:5px;border:1px solid #ffffff20;border-radius:999px;background:linear-gradient(135deg,#ffffff15,#ffffff04);backdrop-filter:blur(22px) saturate(170%);box-shadow:inset 0 1px #ffffff20,0 8px 28px #0003}
+    .nav button{min-height:44px;padding:0 19px;display:flex;align-items:center;gap:9px;border:0;border-radius:999px;background:transparent;color:var(--fg2);font-weight:600}
+    .nav button:hover{background:#ffffff10;color:white}
+    .nav button.active{background:linear-gradient(135deg,#7c3aed99,#5b2ba177);color:white;box-shadow:inset 0 1px #ffffff30}
+    .account{display:flex;justify-content:flex-end;align-items:center;gap:9px}
+    .avatar,.round-btn{width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--bdr2);border-radius:50%;background:#2b1b8355}
+    .round-btn{font-size:18px}
+    main{width:min(1160px,100%);margin:42px auto 0}
+    .page{display:none}.page.active{display:block}
+    .heading{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}
+    h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:-1.6px}
+    .toolbar{display:flex;align-items:center;gap:9px}
+    .search{width:min(390px,35vw);height:50px;padding:0 15px;display:flex;align-items:center;gap:10px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2e88;color:var(--fg2)}
+    .search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--fg)}
+    .search input::placeholder{color:var(--fg2)}
+    .button{min-height:46px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2e99;color:var(--fg);font-weight:600;transition:.18s}
+    .button:hover{background:#7c3aed33;transform:translateY(-1px)}
+    .button.primary{border-color:transparent;background:linear-gradient(135deg,var(--p500),var(--p400));box-shadow:0 0 24px #7c3aed3b}
+    .button.danger{color:var(--danger)}
+    .button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .track-list{border:1px solid #7c3aed20;border-radius:16px;background:#0a072044}
+    .track-row{position:relative;min-height:76px;padding:10px 14px;display:grid;grid-template-columns:48px minmax(0,1fr) 58px 40px 42px;align-items:center;gap:13px;border-bottom:1px solid #7c3aed17}
+    .track-row:last-child{border-bottom:0}
+    .track-row:hover,.track-row.selected{background:#7c3aed20}
+    .track-row.selected{box-shadow:inset 3px 0 var(--p300)}
+    .art{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#7c3aed,#382077);font-size:20px}
+    .track-row.selected .art{outline:2px solid var(--p300)}
+    .track-info{min-width:0;cursor:pointer}
+    .track-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+    .track-artist,.muted{color:var(--fg2);font-size:13px}
+    .duration{text-align:right;color:var(--fg2);font-size:13px}
+    .track-control{width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--fg2);font-size:17px}
+    .track-control:hover{background:#7c3aed33;color:white}
+    .track-control.cached{color:var(--p300)}
+    .more-menu{display:none;position:absolute;z-index:10;right:10px;top:60px;width:220px;padding:7px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f7;box-shadow:0 18px 45px #0008;backdrop-filter:blur(18px)}
+    .more-menu.open{display:block}
+    .more-menu button{width:100%;min-height:42px;padding:0 10px;display:flex;gap:10px;align-items:center;text-align:left;border:0;border-radius:8px;background:transparent}
+    .more-menu button:hover{background:#7c3aed33}.more-menu .danger{color:var(--danger)}
+    .tools{display:none;position:absolute;z-index:25;right:0;top:74px;width:245px;padding:12px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f5;box-shadow:0 18px 45px #0008}
+    .tools.open{display:block}.tools h3{padding:5px 8px 9px;color:var(--fg2);font:700 11px "Space Mono";letter-spacing:2px}
+    .tools button{width:100%;padding:10px 8px;border:0;border-radius:8px;text-align:left;background:transparent}.tools button:hover{background:#7c3aed33}
+    .selection{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 14px;border:1px solid var(--bdr2);border-radius:12px;background:#110e2ecc}
+    .selection[hidden]{display:none}.selection .count{margin-right:auto;color:var(--fg2)}
+    .playlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+    .playlist-tile{padding:16px;border:1px solid var(--bdr);border-radius:16px;background:#110e2ebd;text-align:left}
+    .playlist-tile:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+    .playlist-art{aspect-ratio:1.5;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#4a1fa8,#7c3aed 60%,#a33bc1);font-size:34px}
+    .playlist-tile h3{margin-top:12px}
+    .eyebrow{color:var(--fg2);font:700 12px "Space Mono";letter-spacing:3px}
+    .back{margin-bottom:15px;border:0;background:transparent;color:var(--fg2)}
+    .playlist-hero{display:grid;grid-template-columns:160px 1fr;align-items:center;gap:24px;margin-bottom:20px;padding:24px;border:1px solid var(--bdr);border-radius:18px;background:#110e2ec9}
+    .playlist-hero .playlist-art{width:160px;aspect-ratio:1}
+    .playlist-hero h2{margin:6px 0;font-size:42px;line-height:1.1}
+    .playlist-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .section{min-height:250px;border:1px solid var(--bdr);border-radius:16px;background:#110e2e77}
+    .section h3{padding:16px 19px;border-bottom:1px solid var(--bdr)}
+    .empty{min-height:190px;display:grid;place-items:center;padding:25px;text-align:center}
+    .empty p{margin:7px 0 13px;color:var(--fg2)}
+    .upload-modal{width:min(850px,100%)}
+    .drop-zone{min-height:155px;display:grid;place-items:center;padding:20px;border:1px dashed var(--p300);border-radius:16px;background:#7c3aed0d;text-align:center;cursor:pointer}
+    .drop-zone.dragging{background:#7c3aed30}
+    .drop-zone strong{display:block;font-size:18px}.drop-zone span{color:var(--fg2)}
+    .folder-prompt,.mode-box,.upload-meta{margin-top:13px;padding:14px;border:1px solid var(--bdr);border-radius:13px;background:#0a072088}
+    .folder-prompt{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .mode-box h3{margin-bottom:9px}
+    .mode-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .mode-options label{padding:13px;border:1px solid var(--bdr2);border-radius:12px;cursor:pointer}
+    .mode-options label:has(input:checked){background:#7c3aed44}
+    .mode-options input{accent-color:var(--p400);margin-right:7px}
+    .metadata-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px}
+    .field label{display:block;margin-bottom:5px}.field input{width:100%;height:44px;padding:0 11px;border:1px solid var(--bdr2);border-radius:10px;background:var(--black);color:var(--fg)}
+    .queue-head{display:flex;justify-content:space-between;align-items:center;margin:15px 0 8px;color:var(--fg2);font:700 12px "Space Mono";letter-spacing:2px}
+    .queue{max-height:220px;overflow:auto;display:grid;gap:6px}
+    .queue-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:#110e2eaa}
+    .queue-item small{display:block;color:var(--fg2)}
+    .queue-item button{border:0;background:transparent;color:var(--fg2)}
+    .modal-backdrop{display:none;position:fixed;z-index:100;inset:0;place-items:center;padding:18px;background:#03020ad9;backdrop-filter:blur(7px)}
+    .modal-backdrop.open{display:grid}
+    .modal{width:min(480px,100%);max-height:90vh;overflow:auto;padding:21px;border:1px solid var(--bdr2);border-radius:17px;background:#100d2b;box-shadow:0 30px 90px #0009}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+    .modal-close{border:0;background:transparent;color:var(--fg2);font-size:24px}
+    .modal input[type=text],.modal input[type=email],.modal input[type=password]{width:100%;height:47px;margin:6px 0;padding:0 12px;border:1px solid var(--bdr2);border-radius:10px;background:var(--black);color:var(--fg)}
+    .modal .button.primary{width:100%;margin-top:10px}
+    .choice-list{max-height:280px;overflow:auto;margin:8px 0}
+    .choice{display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;color:var(--fg2)}
+    .choice:hover{background:#7c3aed1f}.choice input{accent-color:var(--p400)}
+    footer.player{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be0;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
+    footer.player.collapsed{transform:translate(-50%,calc(100% - 12px))}
+    .player-toggle{position:absolute;top:-23px;right:18px;width:44px;height:26px;border:1px solid var(--bdr2);border-bottom:0;border-radius:12px 12px 0 0;background:#100d2bf5}
+    .now-playing{display:flex;align-items:center;gap:10px;min-width:0}
+    .now-art{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#7c3aed,#382077)}
+    .now-copy{min-width:0}.now-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}.now-artist{color:var(--fg2);font-size:12px}
+    .player-controls{display:grid;grid-template-columns:34px 42px 34px 40px minmax(60px,1fr) 40px;gap:6px;align-items:center}
+    .player-controls button,.volume button{border:0;background:transparent;color:var(--fg2)}
+    .player-controls .play{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--p500),var(--p400));color:white}
+    .player-time{color:var(--fg2);font-size:12px;white-space:nowrap}
+    input[type=range]{width:100%;accent-color:var(--p300)}
+    .volume{display:flex;align-items:center;gap:8px}
+    .toast{position:fixed;z-index:150;left:50%;bottom:110px;transform:translate(-50%,10px);opacity:0;pointer-events:none;padding:10px 16px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2ef5;transition:.2s}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:850px){
+      .app{padding:12px 14px 120px}.topbar{grid-template-columns:auto 1fr auto;min-height:65px;padding:8px 10px}
+      .brand-name{display:none}.brand-mark{width:42px;height:42px}.nav button{padding:0 13px}
+      .heading{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.search{width:auto;flex:1}
+      footer.player{grid-template-columns:minmax(120px,1fr) minmax(210px,1.3fr)}.volume{display:none}
+    }
+    @media(max-width:560px){
+      .nav button{padding:0 12px}.nav-label{display:none}.account .round-btn{display:none}
+      .track-row{grid-template-columns:42px minmax(0,1fr) 34px 34px;gap:7px;padding:8px}
+      .track-row .duration{display:none}.art{width:40px;height:40px}
+      .metadata-fields{grid-template-columns:1fr}.mode-options{grid-template-columns:1fr}
+      .folder-prompt{align-items:flex-start;flex-direction:column}
+      footer.player{width:calc(100% - 18px);bottom:7px;min-height:72px;grid-template-columns:minmax(90px,1fr) 180px;padding:8px;gap:6px}
+      .now-art{width:39px;height:39px}.now-title{font-size:12px}
+      .player-controls{grid-template-columns:35px 36px 35px minmax(45px,1fr);gap:4px}
+      .player-controls .prev,.player-controls .next,.player-time.end{display:none}
+      .player-controls .play{width:36px;height:36px}
+      .playlist-hero{grid-template-columns:90px minmax(0,1fr);gap:13px;padding:14px}
+      .playlist-hero .playlist-art{width:90px}.playlist-hero h2{font-size:28px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="PantherPlay home"><span class="brand-mark">🐾</span><span class="brand-name">PantherPlay</span></a>
+    <nav class="nav" aria-label="Main navigation">
+      <button class="active" data-page="library"><span>▥</span><span class="nav-label">Library</span></button>
+      <button data-page="playlists"><span>☷</span><span class="nav-label">Playlists</span></button>
+      <button data-page="offline"><span>⇩</span><span class="nav-label">Offline</span></button>
+    </nav>
+    <div class="account"><button class="avatar" id="accountButton">?</button><button class="round-btn" id="signOutButton" title="Sign out">↪</button></div>
+  </header>
+
+  <main>
+    <section class="page active" id="libraryPage">
+      <div class="heading">
+        <h1>Library</h1>
+        <div class="toolbar">
+          <label class="search">⌕ <input id="librarySearch" placeholder="Search tracks, artists, albums"></label>
+          <button class="button" id="actionsButton">☷ <span>Actions</span></button>
+          <button class="button primary" id="uploadButton">↑ Upload tracks</button>
+        </div>
+      </div>
+      <div class="tools" id="tools">
+        <h3>LIBRARY TOOLS</h3>
+        <button data-tool="fix">✦ &nbsp; Fix names</button>
+        <button data-tool="duplicates">▧ &nbsp; Find duplicates</button>
+        <button data-tool="mass-delete">☑ &nbsp; Mass delete</button>
+      </div>
+      <div class="selection" id="selectionBar" hidden>
+        <span class="count" id="selectionCount">0 selected</span>
+        <button class="button" id="cancelSelection">Cancel</button>
+        <button class="button danger" id="deleteSelected" disabled>Delete selected</button>
+      </div>
+      <div class="track-list" id="libraryTracks"></div>
+      <div class="muted" id="libraryEmpty" style="padding:25px;text-align:center">Your library is empty. Upload some audio to get started.</div>
+    </section>
+
+    <section class="page" id="playlistsPage">
+      <div id="playlistBrowser">
+        <div class="heading"><div><div class="eyebrow">YOUR COLLECTION</div><h1>Playlists</h1></div><button class="button primary" id="newPlaylist">＋ New playlist</button></div>
+        <div class="playlist-grid" id="playlistGrid"></div>
+      </div>
+      <div id="playlistDetail" hidden>
+        <button class="back" id="backPlaylists">← &nbsp; All playlists</button>
+        <div class="playlist-hero">
+          <div class="playlist-art">♪</div>
+          <div><div class="eyebrow">PLAYLIST</div><h2 id="detailName"></h2><div class="muted" id="detailMeta"></div>
+            <div class="playlist-actions">
+              <button class="button primary" id="playAll">▷ Play all</button>
+              <button class="button" id="addPlaylistTracks">＋ Add tracks</button>
+              <button class="button" id="savePlaylistOffline">⇩ Save offline</button>
+              <button class="button" id="sharePlaylist">⌯ Share</button>
+              <button class="button danger" id="deletePlaylist">♲</button>
+            </div>
+          </div>
+        </div>
+        <div class="section"><h3>Tracks</h3><div id="detailTracks"></div><div class="empty" id="playlistEmpty"><div><strong>This playlist is empty</strong><p>Add tracks from your library to fill it up.</p><button class="button primary" id="emptyAddTracks">＋ Add tracks</button></div></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="offlinePage">
+      <div class="heading"><h1>Offline</h1><label class="search">⌕ <input id="offlineSearch" placeholder="Search offline tracks"></label></div>
+      <div class="track-list" id="offlineTracks"></div>
+      <div class="muted" id="offlineEmpty" style="padding:25px;text-align:center">No tracks saved for offline listening.</div>
+    </section>
+  </main>
+</div>
+
+<footer class="player collapsed" id="player">
+  <button class="player-toggle" id="playerToggle" aria-label="Expand player">⌃</button>
+  <div class="now-playing"><div class="now-art">♪</div><div class="now-copy"><div class="now-title" id="nowTitle">Nothing playing</div><div class="now-artist" id="nowArtist">PantherPlay</div></div></div>
+  <div class="player-controls">
+    <button class="prev" id="previous">|‹</button><button class="play" id="playPause">▷</button><button class="next" id="next">›|</button>
+    <span class="player-time" id="currentTime">0:00</span><input id="seek" type="range" min="0" max="100" value="0"><span class="player-time end" id="duration">0:00</span>
+  </div>
+  <div class="volume"><button id="mute">◖</button><input id="volume" type="range" min="0" max="1" step=".01" value=".7"></div>
+</footer>
+<audio id="audio" preload="metadata"></audio>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <section class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h2 id="modalTitle">PantherPlay</h2><button class="modal-close" id="modalClose" aria-label="Close">×</button></div>
+    <div id="modalBody"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // Paste your Supabase project URL and publishable/anon key here.
+  const SUPABASE_URL = "https://tnccxiwnntsneshgvkxi.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0VTQLxxbXYDt3jBeiUusgA_u7X9e16W";
+  const BUCKET = "audio";
+  const MAX_FREE_STORAGE_BYTES = 1024 * 1024 * 1024;
+
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const audio = $("#audio");
+  const isConfigured = SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY !== "sb_publishable_0VTQLxxbXYDt3jBeiUusgA_u7X9e16W";
+  const supabase = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  let user = null, tracks = [], playlists = [], currentPlaylist = null, currentTrack = null;
+  let queue = [], selectedIds = new Set(), selectionMode = false, uploadQueue = [], duplicateIds = new Set();
+  let toastTimer;
+
+  function toast(message) {
+    const node=$("#toast"); node.textContent=message; node.classList.add("show");
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>node.classList.remove("show"),2600);
+  }
+  function esc(value="") {
+    return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+  }
+  function timeText(value) {
+    if(!Number.isFinite(Number(value))) return "0:00";
+    return `${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,"0")}`;
+  }
+  function setPlayerCollapsed(value) {
+    $("#player").classList.toggle("collapsed",value);
+    $("#playerToggle").textContent=value?"⌃":"⌄";
+    $("#playerToggle").setAttribute("aria-label",value?"Expand player":"Collapse player");
+  }
+  function showModal(title,html,wide=false) {
+    $("#modalTitle").textContent=title; $("#modalBody").innerHTML=html;
+    $("#modal").classList.toggle("upload-modal",wide); $("#modalBackdrop").classList.add("open");
+  }
+  function closeModal(){ $("#modalBackdrop").classList.remove("open"); $("#modal").classList.remove("upload-modal"); }
+
+  async function requireUser() {
+    if(user) return user;
+    if(!supabase){ showSetupNotice(); return null; }
+    showModal("Sign in to PantherPlay",`
+      <form id="authForm">
+        <p class="muted">Sign in to sync your library and playlists.</p>
+        <input type="email" name="email" placeholder="Email" required autocomplete="username">
+        <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+        <button class="button primary" type="submit">Sign in</button>
+        <button class="button" type="button" id="createAccount" style="width:100%;margin-top:9px">Create account</button>
+      </form>`);
+    return null;
+  }
+  function showSetupNotice(){
+    showModal("Connect Supabase",`<p class="muted">Add your Supabase project URL and publishable/anon key in the CONFIG section near the top of this file, then run the SQL setup instructions.</p>`);
+  }
+  async function authFormSubmit(create) {
+    const form=$("#authForm"), data=new FormData(form), email=data.get("email"), password=data.get("password");
+    const result=create
+      ? await supabase.auth.signUp({email,password})
+      : await supabase.auth.signInWithPassword({email,password});
+    if(result.error){toast(result.error.message);return}
+    if(create&&!result.data.session){closeModal();toast("Check your email to confirm the account, then sign in.");return}
+    user=result.data.user; closeModal(); await refresh(); toast(create?"Account created.":"Signed in.");
+  }
+
+  async function refresh() {
+    if(!user)return;
+    const [trackRes,playlistRes]=await Promise.all([
+      supabase.from("tracks").select("*").order("title"),
+      supabase.from("playlists").select("*").order("name")
+    ]);
+    if(trackRes.error||playlistRes.error){toast((trackRes.error||playlistRes.error).message);return}
+    tracks=trackRes.data||[]; playlists=playlistRes.data||[];
+    const links=await supabase.from("playlist_tracks").select("playlist_id,track_id");
+    if(links.error){toast(links.error.message);return}
+    playlists.forEach(p=>p.trackIds=(links.data||[]).filter(x=>x.playlist_id===p.id).map(x=>x.track_id));
+    renderAll();
+  }
+
+  async function signedAudioUrl(track) {
+    const {data,error}=await supabase.storage.from(BUCKET).createSignedUrl(track.storage_path,3600);
+    if(error) throw error;
+    return data.signedUrl;
+  }
+
+  function renderTracks(container,list,mode="library") {
+    container.innerHTML="";
+    list.forEach(track=>{
+      const row=document.createElement("article");
+      row.className="track-row"+(track.id===currentTrack?" current":"")+(selectedIds.has(track.id)?" selected":"");
+      row.dataset.id=track.id;
+      const cached=localStorage.getItem("pp-offline-"+track.id)==="1";
+      row.innerHTML=`
+        <div class="art" title="${selectionMode&&mode==="library"?"Select track":"Play track"}">♪</div>
+        <div class="track-info" tabindex="0"><div class="track-title">${esc(track.title)}</div><div class="track-artist">${esc(track.artist||"Unknown artist")}</div></div>
+        <div class="duration">${timeText(track.duration)}</div>
+        <button class="track-control cache" title="${mode==="offline"||cached?"Remove from cache":"Save offline"}">${mode==="offline"||cached?"▣":"⇩"}</button>
+        <button class="track-control more" aria-label="Track options">•••</button>
+        <div class="more-menu">
+          <button data-action="add">＋ &nbsp; Add to playlist</button>
+          <button data-action="share">↗ &nbsp; Share</button>
+          ${mode==="offline"?'<button class="danger" data-action="cache">♲ &nbsp; Remove from cache</button>':'<button data-action="edit">✎ &nbsp; Edit details</button><button class="danger" data-action="delete">♲ &nbsp; Delete</button>'}
+        </div>`;
+      const info=$(".track-info",row), art=$(".art",row);
+      const activate=()=>selectionMode&&mode==="library"?toggleSelection(track.id):playTrack(track,list);
+      info.addEventListener("click",activate); art.addEventListener("click",activate);
+      info.addEventListener("keydown",e=>{if(e.key==="Enter")activate()});
+      $(".more",row).onclick=e=>{e.stopPropagation();$$(".more-menu.open").forEach(m=>m.classList.remove("open"));$(".more-menu",row).classList.toggle("open")};
+      $(".cache",row).onclick=()=>toggleOffline(track);
+      $(".more-menu",row).onclick=e=>{
+        const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
+        $(".more-menu",row).classList.remove("open");
+        if(action==="add") addToPlaylistDialog(track.id);
+        if(action==="edit") editTrack(track);
+        if(action==="delete") deleteOne(track);
+        if(action==="cache") removeOffline(track);
+        if(action==="share") shareTrack(track);
+      };
+      container.appendChild(row);
+    });
+  }
+
+  function renderLibrary(){
+    const query=$("#librarySearch").value.toLowerCase().trim();
+    const list=tracks.filter(t=>`${t.title} ${t.artist} ${t.album||""}`.toLowerCase().includes(query));
+    renderTracks($("#libraryTracks"),list);
+    $("#libraryEmpty").style.display=tracks.length?"none":"block";
+    $("#libraryTracks").style.display=tracks.length?"":"none";
+    updateSelection();
+  }
+  function renderOffline(){
+    const query=$("#offlineSearch").value.toLowerCase().trim();
+    const list=tracks.filter(t=>localStorage.getItem("pp-offline-"+t.id)==="1"&&`${t.title} ${t.artist}`.toLowerCase().includes(query));
+    renderTracks($("#offlineTracks"),list,"offline");
+    $("#offlineEmpty").style.display=list.length?"none":"block";
+    $("#offlineTracks").style.display=list.length?"":"none";
+  }
+  function renderPlaylists(){
+    const grid=$("#playlistGrid");grid.innerHTML="";
+    playlists.forEach(p=>{
+      const tile=document.createElement("button");tile.className="playlist-tile";
+      tile.innerHTML=`<div class="playlist-art">♪</div><h3>${esc(p.name)}</h3><div class="muted">${(p.trackIds||[]).length} tracks</div>`;
+      tile.onclick=()=>openPlaylist(p.id);grid.appendChild(tile);
+    });
+    if(!playlists.length)grid.innerHTML='<p class="muted">No playlists yet. Create one to get started.</p>';
+  }
+  function renderDetail(){
+    const p=playlists.find(x=>x.id===currentPlaylist);if(!p)return;
+    const list=(p.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);
+    $("#detailName").textContent=p.name;
+    $("#detailMeta").textContent=`${list.length} tracks · ${Math.round(list.reduce((n,t)=>n+(t.duration||0),0)/60)} min`;
+    renderTracks($("#detailTracks"),list,"playlist");$("#playlistEmpty").style.display=list.length?"none":"grid";
+  }
+  function renderAll(){renderLibrary();renderOffline();renderPlaylists();if(currentPlaylist)renderDetail()}
+  function openPlaylist(id){currentPlaylist=id;$("#playlistBrowser").hidden=true;$("#playlistDetail").hidden=false;renderDetail()}
+  function closePlaylist(){currentPlaylist=null;$("#playlistBrowser").hidden=false;$("#playlistDetail").hidden=true}
+
+  function updateSelection(){
+    $("#selectionBar").hidden=!selectionMode;
+    $("#selectionCount").textContent=`${selectedIds.size} selected`;
+    $("#deleteSelected").disabled=!selectedIds.size;
+  }
+  function toggleSelection(id){selectedIds.has(id)?selectedIds.delete(id):selectedIds.add(id);renderLibrary()}
+  function selectionModeOn(on){selectionMode=on;if(!on)selectedIds.clear();renderLibrary()}
+
+  async function playTrack(track,list=tracks){
+    if(!track)return;
+    currentTrack=track.id;queue=list.map(t=>t.id);setPlayerCollapsed(false);
+    $("#nowTitle").textContent=track.title;$("#nowArtist").textContent=track.artist||"Unknown artist";
+    $("#duration").textContent=timeText(track.duration);$("#currentTime").textContent="0:00";renderAll();
+    try{
+      const url=await signedAudioUrl(track);
+      audio.src=url;await audio.play();$("#playPause").textContent="Ⅱ";
+    }catch(error){toast("Could not play track: "+error.message)}
+  }
+  async function deleteOne(track){
+    if(!confirm(`Delete "${track.title}" from your library?`))return;
+    await deleteTracks([track.id]);
+  }
+  async function deleteTracks(ids){
+    const deleting=tracks.filter(t=>ids.includes(t.id));
+    if(!deleting.length)return;
+    const paths=deleting.map(t=>t.storage_path).filter(Boolean);
+    if(paths.length){const rm=await supabase.storage.from(BUCKET).remove(paths);if(rm.error){toast(rm.error.message);return}}
+    const del=await supabase.from("tracks").delete().in("id",ids);
+    if(del.error){toast(del.error.message);return}
+    if(ids.includes(currentTrack)){audio.pause();audio.removeAttribute("src");currentTrack=null;setPlayerCollapsed(true)}
+    selectedIds.clear();selectionModeOn(false);await refresh();toast(`Deleted ${ids.length} track${ids.length===1?"":"s"}.`);
+  }
+  async function removeOffline(track){localStorage.removeItem("pp-offline-"+track.id);renderAll();toast("Removed from offline list.")}
+  async function toggleOffline(track){
+    if(localStorage.getItem("pp-offline-"+track.id)==="1")return removeOffline(track);
+    // Browser cache is a saved reference, not a durable downloaded audio copy.
+    localStorage.setItem("pp-offline-"+track.id,"1");renderAll();toast("Added to Offline list. Full offline audio caching is not enabled yet.");
+  }
+  async function fixNames(){
+    const updates=tracks.map(t=>({track:t,title:t.title.replace(/\.[^.]+$/,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim(),artist:(t.artist||"").replace(/\s+/g," ").trim()}))
+      .filter(x=>x.title&& (x.title!==x.track.title||x.artist!==x.track.artist));
+    if(!updates.length)return toast("Track names already look clean.");
+    for(const x of updates){
+      const {error}=await supabase.from("tracks").update({title:x.title,artist:x.artist||"Unknown artist"}).eq("id",x.track.id);
+      if(error){toast(error.message);return}
+    }
+    await refresh();toast(`Cleaned ${updates.length} track name${updates.length===1?"":"s"}.`);
+  }
+  async function findLibraryDuplicates(){
+    if(!tracks.length)return toast("Your library is empty.");
+    const byHash=new Map();tracks.forEach(t=>{if(t.checksum){if(!byHash.has(t.checksum))byHash.set(t.checksum,[]);byHash.get(t.checksum).push(t)}});
+    const groups=[...byHash.values()].filter(g=>g.length>1);
+    toast(groups.length?`Found ${groups.reduce((n,g)=>n+g.length-1,0)} duplicate track(s).`:"No exact duplicates found.");
+    if(groups.length)showDuplicateModal(groups);
+  }
+  function showDuplicateModal(groups){
+    showModal("Duplicate tracks",groups.map(g=>`<div class="upload-meta"><strong>${esc(g[0].title)}</strong><div class="muted">${g.length} identical files</div>${g.map(t=>`<div class="muted">• ${esc(t.title)} — ${esc(t.artist||"Unknown artist")}</div>`).join("")}</div>`).join(""));
+  }
+  function editTrack(track){
+    showModal("Edit track details",`<form id="editForm"><input name="title" value="${esc(track.title)}" required><input name="artist" value="${esc(track.artist||"")}" placeholder="Artist"><input name="album" value="${esc(track.album||"")}" placeholder="Album"><input name="genre" value="${esc(track.genre||"")}" placeholder="Genre"><button class="button primary" style="width:100%;margin-top:12px">Save</button></form>`);
+    $("#editForm").onsubmit=async e=>{e.preventDefault();const d=new FormData(e.currentTarget);
+      const {error}=await supabase.from("tracks").update({title:d.get("title").trim(),artist:d.get("artist").trim()||"Unknown artist",album:d.get("album").trim(),genre:d.get("genre").trim()}).eq("id",track.id);
+      if(error)return toast(error.message);closeModal();await refresh();toast("Track updated.")};
+  }
+  async function shareTrack(track){
+    const text=`${track.title} — ${track.artist||"Unknown artist"}`;
+    try{await navigator.clipboard.writeText(text);toast("Track details copied.")}catch{toast(text)}
+  }
+
+  function parentFolder(file){
+    const path=file.webkitRelativePath||file.name;
+    const parts=path.split("/");parts.pop();return parts.join("/");
+  }
+  function isAudio(file){return /\.(mp3|m4a|wav|ogg|oga|opus|flac|aac|webm)$/i.test(file.name)}
+  function showUploadDialog(){
+    uploadQueue=[];duplicateIds.clear();
+    showModal("Upload tracks",`
+      <div class="drop-zone" id="dropZone"><div><strong>⇧ Drop audio files or folders here</strong><span>or click to choose files — MP3, M4A, WAV, OGG, FLAC</span></div></div>
+      <input id="audioPicker" type="file" accept="audio/*,.flac,.opus" multiple hidden>
+      <div class="folder-prompt"><div><strong>Adding a whole folder?</strong><div class="muted">Choose a folder to include nested folders and keep their names.</div></div><button class="button" id="folderPickerButton">＋ Choose folder</button></div>
+      <input id="folderPicker" type="file" webkitdirectory directory multiple hidden>
+      <div id="uploadOptions" hidden>
+        <div class="mode-box"><h3 id="folderCount">0 folders detected</h3><div class="mode-options">
+          <label><input type="radio" name="folderMode" value="playlists" checked><strong>Use folders as playlists</strong><div class="muted">One playlist per folder</div></label>
+          <label><input type="radio" name="folderMode" value="extract"><strong>Extract audio files</strong><div class="muted">Just add the tracks</div></label>
+        </div></div>
+        <div class="metadata-fields">
+          <div class="field"><label>Artist</label><input id="uploadArtist" placeholder="Unknown artist"></div>
+          <div class="field"><label>Album</label><input id="uploadAlbum" placeholder="Optional"></div>
+          <div class="field"><label>Genre</label><input id="uploadGenre" placeholder="Optional"></div>
+        </div>
+        <div class="queue-head"><span id="queueCount">0 FILES QUEUED</span><button class="button" id="findQueueDuplicates">Find duplicates</button><button class="button" id="clearQueue">Clear all</button></div>
+        <div class="queue" id="queueList"></div>
+        <div class="upload-meta muted" id="queueSummary"></div>
+        <button class="button primary" id="startUpload" style="width:100%;margin-top:13px">Upload selected files</button>
+      </div>`,true);
+
+    const addFiles=files=>{
+      for(const file of files)if(isAudio(file)&&!uploadQueue.some(f=>(f.webkitRelativePath||f.name)===(file.webkitRelativePath||file.name)))uploadQueue.push(file);
+      renderUploadQueue();
+    };
+    $("#dropZone").onclick=()=>$("#audioPicker").click();
+    $("#audioPicker").onchange=e=>addFiles([...e.target.files]);
+    $("#folderPickerButton").onclick=()=>$("#folderPicker").click();
+    $("#folderPicker").onchange=e=>addFiles([...e.target.files]);
+    const zone=$("#dropZone");
+    ["dragenter","dragover"].forEach(type=>zone.addEventListener(type,e=>{e.preventDefault();zone.classList.add("dragging")}));
+    ["dragleave","drop"].forEach(type=>zone.addEventListener(type,e=>{e.preventDefault();zone.classList.remove("dragging")}));
+    zone.addEventListener("drop",async e=>{
+      const items=[...e.dataTransfer.items];
+      const files=[];
+      for(const item of items){
+        const entry=item.webkitGetAsEntry?.();
+        if(entry) await readEntry(entry,files);
+        else if(item.getAsFile()) files.push(item.getAsFile());
+      }
+      addFiles(files);
+    });
+    $("#clearQueue").onclick=()=>{uploadQueue=[];duplicateIds.clear();renderUploadQueue()};
+    $("#findQueueDuplicates").onclick=findQueuedDuplicates;
+    $("#startUpload").onclick=uploadQueued;
+  }
+  function renderUploadQueue(){
+    $("#uploadOptions").hidden=!uploadQueue.length;
+    const folders=new Set(uploadQueue.map(parentFolder).filter(Boolean));
+    $("#folderCount").textContent=`${folders.size} folder${folders.size===1?"":"s"} detected`;
+    $("#queueCount").textContent=`${uploadQueue.length} FILE${uploadQueue.length===1?"":"S"} QUEUED`;
+    const bytes=uploadQueue.reduce((n,f)=>n+f.size,0);
+    $("#queueSummary").textContent=`${(bytes/1024/1024).toFixed(1)} MB selected · ${duplicateIds.size} duplicate(s) flagged`;
+    $("#queueList").innerHTML=uploadQueue.slice(0,300).map((f,i)=>`<div class="queue-item"><div><strong>${esc(f.name)}</strong><small>${(f.size/1024/1024).toFixed(1)} MB · ${esc(parentFolder(f)||"Selected files")}${duplicateIds.has(i)?" · DUPLICATE":""}</small></div><button data-remove="${i}" aria-label="Remove file">×</button></div>`).join("")+(uploadQueue.length>300?`<div class="muted">And ${uploadQueue.length-300} more files…</div>`:"");
+    $$("#queueList [data-remove]").forEach(b=>b.onclick=()=>{uploadQueue.splice(Number(b.dataset.remove),1);duplicateIds.clear();renderUploadQueue()});
+  }
+  async function readEntry(entry,out){
+    if(entry.isFile){await new Promise(resolve=>entry.file(file=>{Object.defineProperty(file,"webkitRelativePath",{value:entry.fullPath.replace(/^\//,"")});out.push(file);resolve()},resolve));return}
+    if(entry.isDirectory){
+      const reader=entry.createReader();
+      const readBatch=()=>new Promise(resolve=>reader.readEntries(resolve,()=>resolve([])));
+      let batch;do{batch=await readBatch();for(const child of batch)await readEntry(child,out)}while(batch.length);
+    }
+  }
+  async function hashFile(file){
+    const digest=await crypto.subtle.digest("SHA-256",await file.arrayBuffer());
+    return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  }
+  async function findQueuedDuplicates(){
+    if(!uploadQueue.length)return toast("Choose files first.");
+    toast("Checking file hashes…");
+    const hashes=[];
+    for(const file of uploadQueue)hashes.push(await hashFile(file));
+    const existing=await supabase.from("tracks").select("checksum").in("checksum",[...new Set(hashes)]);
+    if(existing.error)return toast(existing.error.message);
+    const known=new Set((existing.data||[]).map(x=>x.checksum));
+    const seen=new Set();duplicateIds.clear();
+    hashes.forEach((hash,i)=>{if(known.has(hash)||seen.has(hash))duplicateIds.add(i);seen.add(hash)});
+    renderUploadQueue();
+    toast(`${duplicateIds.size} duplicate file(s) found.`);
+  }
+  function cleanFileTitle(name){return name.replace(/\.[^.]+$/,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim()}
+  async function uploadQueued(){
+    if(!uploadQueue.length)return;
+    const files=[...uploadQueue],skip=new Set(duplicateIds);
+    const bytes=files.reduce((n,f,i)=>n+(skip.has(i)?0:f.size),0);
+    if(bytes>MAX_FREE_STORAGE_BYTES)return toast("This batch exceeds the 1 GB free-storage limit.");
+    if(!await requireUser())return;
+    const button=$("#startUpload");button.disabled=true;button.textContent="Uploading…";
+    const mode=$("input[name=folderMode]:checked").value;
+    const artist=$("#uploadArtist").value.trim()||"Unknown artist";
+    const album=$("#uploadAlbum").value.trim(),genre=$("#uploadGenre").value.trim();
+    const uploaded=[],errors=[];
+    for(let i=0;i<files.length;i++){
+      if(skip.has(i))continue;
+      const file=files[i],checksum=await hashFile(file);
+      const {data:exists}=await supabase.from("tracks").select("id").eq("checksum",checksum).limit(1);
+      if(exists?.length){skip.add(i);continue}
+      const ext=(file.name.match(/\.([a-z0-9]{2,8})$/i)||[])[1]||"audio";
+      const storagePath=`${user.id}/${crypto.randomUUID()}.${ext.toLowerCase()}`;
+      const upload=await supabase.storage.from(BUCKET).upload(storagePath,file,{contentType:file.type||"application/octet-stream",upsert:false});
+      if(upload.error){errors.push(`${file.name}: ${upload.error.message}`);continue}
+      const record={user_id:user.id,title:cleanFileTitle(file.name),artist,album,genre,storage_path:storagePath,checksum,size_bytes:file.size,folder_path:parentFolder(file)};
+      const insert=await supabase.from("tracks").insert(record).select().single();
+      if(insert.error){await supabase.storage.from(BUCKET).remove([storagePath]);errors.push(`${file.name}: ${insert.error.message}`);continue}
+      uploaded.push(insert.data);
+    }
+
+    if(mode==="playlists"){
+      const groups=new Map();
+      files.forEach((file,index)=>{
+        if(skip.has(index))return;
+        const path=parentFolder(file);if(!path)return;
+        const key=path.split("/").join(" / ");
+        const record=uploaded.find(t=>t.title===cleanFileTitle(file.name)&&t.folder_path===path);
+        if(record){if(!groups.has(key))groups.set(key,[]);groups.get(key).push(record.id)}
+      });
+      for(const [name,ids] of groups){
+        const {data:p,error}=await supabase.from("playlists").insert({user_id:user.id,name}).select().single();
+        if(error){errors.push(`Playlist ${name}: ${error.message}`);continue}
+        if(ids.length){const links=await supabase.from("playlist_tracks").insert(ids.map((track_id,position)=>({playlist_id:p.id,track_id,position})));if(links.error)errors.push(links.error.message)}
+      }
+    }
+
+    await refresh();
+    button.disabled=false;button.textContent="Upload selected files";
+    if(errors.length)toast(`Uploaded ${uploaded.length}; ${errors.length} error(s). Check console for details.`);
+    else toast(`Uploaded ${uploaded.length} track(s); skipped ${skip.size} duplicate(s).`);
+    if(errors.length)console.error(errors);
+    closeModal();
+  }
+
+  $("#uploadButton").onclick=async()=>{if(await requireUser())showUploadDialog()};
+  $("#actionsButton").onclick=e=>{e.stopPropagation();$("#tools").classList.toggle("open")};
+  $("#tools").onclick=async e=>{
+    const action=e.target.closest("[data-tool]")?.dataset.tool;if(!action)return;$("#tools").classList.remove("open");
+    if(action==="fix")await fixNames();
+    if(action==="duplicates")await findLibraryDuplicates();
+    if(action==="mass-delete"){selectionModeOn(true);toast("Click track artwork to select tracks.");}
+  };
+  $("#cancelSelection").onclick=()=>selectionModeOn(false);
+  $("#deleteSelected").onclick=async()=>{if(!selectedIds.size)return;if(confirm(`Delete ${selectedIds.size} selected tracks?`))await deleteTracks([...selectedIds])};
+  $("#librarySearch").oninput=renderLibrary;$("#offlineSearch").oninput=renderOffline;
+  $$(".nav button").forEach(button=>button.onclick=()=>{
+    $$(".nav button").forEach(b=>b.classList.toggle("active",b===button));
+    $$(".page").forEach(p=>p.classList.remove("active"));$(`#${button.dataset.page}Page`).classList.add("active");
+    $("#tools").classList.remove("open");
+  });
+  $("#newPlaylist").onclick=async()=>{
+    if(!await requireUser())return;
+    showModal("New playlist",`<form id="newPlaylistForm"><input name="name" placeholder="Playlist name" maxlength="80" required><button class="button primary">Create playlist</button></form>`);
+    $("#newPlaylistForm").onsubmit=async e=>{e.preventDefault();const name=new FormData(e.currentTarget).get("name").trim();const {error}=await supabase.from("playlists").insert({user_id:user.id,name});if(error)return toast(error.message);closeModal();await refresh();toast("Playlist created.")};
+  };
+  async function addToPlaylistDialog(trackId=null){
+    if(!await requireUser())return;
+    if(!playlists.length)return toast("Create a playlist first.");
+    const target=currentPlaylist&&$(".page.active").id==="playlistsPage"?playlists.find(p=>p.id===currentPlaylist):null;
+    const targetIds=new Set(target?.trackIds||[]);
+    showModal(target?`Add tracks to ${target.name}`:"Add to playlist",`
+      <form id="addForm">
+        ${target?`<p class="muted">Selected playlist: <strong>${esc(target.name)}</strong></p>`:`<div class="choice-list">${playlists.map(p=>`<label class="choice"><input type="checkbox" name="playlist" value="${p.id}"><span>${esc(p.name)}</span></label>`).join("")}</div>`}
+        <div class="choice-list">${tracks.map(t=>`<label class="choice"><input type="checkbox" name="track" value="${t.id}" ${t.id===trackId?"checked":""} ${targetIds.has(t.id)?"disabled":""}><span>${esc(t.title)}${targetIds.has(t.id)?" — already added":""}</span></label>`).join("")}</div>
+        <button class="button primary" style="width:100%">Add tracks</button>
+      </form>`);
+    $("#addForm").onsubmit=async e=>{
+      e.preventDefault();const form=e.currentTarget;
+      const pids=target?[target.id]:$$('input[name="playlist"]:checked',form).map(x=>x.value);
+      const tids=$$('input[name="track"]:checked',form).map(x=>x.value);
+      if(!pids.length||!tids.length)return toast("Select tracks and a playlist.");
+      for(const pid of pids){
+        const p=playlists.find(x=>x.id===pid),existing=new Set(p?.trackIds||[]);
+        const fresh=tids.filter(id=>!existing.has(id));
+        if(fresh.length){const {error}=await supabase.from("playlist_tracks").insert(fresh.map((track_id,i)=>({playlist_id:pid,track_id,position:existing.size+i})));if(error)return toast(error.message)}
+      }
+      closeModal();await refresh();toast("Tracks added to playlist.");
+    };
+  }
+  $("#addPlaylistTracks").onclick=()=>addToPlaylistDialog();
+  $("#emptyAddTracks").onclick=()=>addToPlaylistDialog();
+  $("#backPlaylists").onclick=closePlaylist;
+  $("#deletePlaylist").onclick=async()=>{
+    const p=playlists.find(x=>x.id===currentPlaylist);if(!p||!confirm(`Delete playlist "${p.name}"?`))return;
+    const {error}=await supabase.from("playlists").delete().eq("id",p.id);if(error)return toast(error.message);
+    closePlaylist();await refresh();toast("Playlist deleted.");
+  };
+  $("#playAll").onclick=()=>{const p=playlists.find(x=>x.id===currentPlaylist),list=(p?.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);if(list.length)playTrack(list[0],list);else toast("This playlist is empty.")};
+  $("#savePlaylistOffline").onclick=()=>{const p=playlists.find(x=>x.id===currentPlaylist);(p?.trackIds||[]).forEach(id=>localStorage.setItem("pp-offline-"+id,"1"));renderAll();toast("Playlist added to Offline list.")};
+  $("#sharePlaylist").onclick=async()=>{const p=playlists.find(x=>x.id===currentPlaylist);if(p){try{await navigator.clipboard.writeText(p.name);toast("Playlist name copied.")}catch{toast(p.name)}}};
+
+  $("#playPause").onclick=async()=>{
+    if(!currentTrack)return toast("Choose a track first.");
+    if(audio.paused){try{await audio.play();$("#playPause").textContent="Ⅱ"}catch(e){toast(e.message)}}
+    else{audio.pause();$("#playPause").textContent="▷"}
+  };
+  function skip(direction){if(!queue.length)return;let i=queue.indexOf(currentTrack);i=(i+direction+queue.length)%queue.length;const nextTrack=tracks.find(t=>t.id===queue[i]);if(nextTrack)playTrack(nextTrack,queue.map(id=>tracks.find(t=>t.id===id)).filter(Boolean))}
+  $("#next").onclick=()=>skip(1);$("#previous").onclick=()=>skip(-1);
+  audio.ontimeupdate=()=>{$("#currentTime").textContent=timeText(audio.currentTime);if(Number.isFinite(audio.duration)){$("#seek").max=audio.duration;$("#seek").value=audio.currentTime}};
+  audio.onloadedmetadata=()=>$("#duration").textContent=timeText(audio.duration);
+  audio.onended=()=>{if(queue.length)skip(1);else setPlayerCollapsed(true)};
+  $("#seek").oninput=e=>{if(audio.src)audio.currentTime=Number(e.target.value)};
+  $("#volume").oninput=e=>audio.volume=Number(e.target.value);
+  $("#mute").onclick=()=>{audio.muted=!audio.muted;$("#mute").textContent=audio.muted?"◌":"◖"};
+  $("#playerToggle").onclick=()=>setPlayerCollapsed(!$("#player").classList.contains("collapsed"));
+  $("#modalClose").onclick=closeModal;$("#modalBackdrop").onclick=e=>{if(e.target.id==="modalBackdrop")closeModal()};
+  document.addEventListener("click",e=>{if(!e.target.closest("#tools,#actionsButton"))$("#tools").classList.remove("open");if(!e.target.closest(".more-menu,.more"))$$(".more-menu.open").forEach(m=>m.classList.remove("open"))});
+
+  $("#accountButton").onclick=()=>requireUser();
+  $("#signOutButton").onclick=async()=>{if(!supabase)return showSetupNotice();await supabase.auth.signOut();user=null;tracks=[];playlists=[];renderAll();toast("Signed out.")};
+
+  if(supabase){
+    supabase.auth.getSession().then(async({data})=>{user=data.session?.user||null;if(user)await refresh();else renderAll()});
+    supabase.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;if(user)refresh();else{tracks=[];playlists=[];renderAll()}});
+    document.addEventListener("click",e=>{
+      if(e.target.id==="createAccount")$("#authForm").onsubmit=ev=>{ev.preventDefault();authFormSubmit(true)};
+      if(e.target.closest("#authForm button[type=submit]"))$("#authForm").onsubmit=ev=>{ev.preventDefault();authFormSubmit(false)};
+    });
+  }else{
+    renderAll();
+    $("#libraryEmpty").textContent="Connect Supabase in the CONFIG section of this file to sign in and sync your library.";
+  }
+})();
+</script>
+</body>
+</html>
