@@ -184,6 +184,61 @@
       .playlist-hero{grid-template-columns:90px minmax(0,1fr);gap:13px;padding:14px}
       .playlist-hero .playlist-art{width:90px}.playlist-hero h2{font-size:28px}
     }
+    /* Edit track details form */
+#editForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#editForm input {
+  width: 100%;
+  min-width: 0;
+  height: 54px;
+  margin: 0 !important;
+  padding: 0 15px !important;
+  color: var(--fg) !important;
+  background: rgba(3, 2, 10, .82) !important;
+  border: 1px solid var(--bdr2) !important;
+  border-radius: 12px !important;
+  font: 500 16px "Space Grotesk", sans-serif !important;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, .28);
+  color-scheme: dark;
+}
+
+#editForm input::placeholder {
+  color: var(--fg2) !important;
+  opacity: 1;
+}
+
+#editForm input:focus {
+  outline: none;
+  border-color: var(--p300) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .2);
+}
+
+#editForm button[type="submit"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 2px !important;
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(135deg, var(--p500), var(--p400));
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  #editForm {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  #editForm button[type="submit"] {
+    grid-column: auto;
+  }
+}
   </style>
 </head>
 <body>
