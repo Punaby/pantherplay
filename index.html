@@ -133,9 +133,25 @@
     .choice-list{max-height:280px;overflow:auto;margin:8px 0}
     .choice{display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;color:var(--fg2)}
     .choice:hover{background:#7c3aed1f}.choice input{accent-color:var(--p400)}
-    footer.player{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be0;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
+    footer{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be0;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
     footer.player.collapsed{transform:translate(-50%,calc(100% - 12px))}
-    .player-toggle{position:absolute;top:-23px;right:18px;width:44px;height:26px;border:1px solid var(--bdr2);border-bottom:0;border-radius:12px 12px 0 0;background:#100d2bf5}
+   .player-toggle {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 54px;
+  height: 16px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(124,58,237,.40);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  color: rgba(240,235,255,.75);
+  background: rgba(16,13,43,.94);
+  box-shadow: 0 -5px 18px rgba(124,58,237,.18);
+  backdrop-filter: blur(16px);
+  font-size: 11px;
+  line-height: 1;
+}
     .now-playing{display:flex;align-items:center;gap:10px;min-width:0}
     .now-art{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#7c3aed,#382077)}
     .now-copy{min-width:0}.now-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}.now-artist{color:var(--fg2);font-size:12px}
@@ -314,15 +330,37 @@
   function showSetupNotice(){
     showModal("Connect Supabase",`<p class="muted">Add your Supabase project URL and publishable/anon key in the CONFIG section near the top of this file, then run the SQL setup instructions.</p>`);
   }
-  async function authFormSubmit(create) {
-    const form=$("#authForm"), data=new FormData(form), email=data.get("email"), password=data.get("password");
-    const result=create
-      ? await supabase.auth.signUp({email,password})
-      : await supabase.auth.signInWithPassword({email,password});
-    if(result.error){toast(result.error.message);return}
-    if(create&&!result.data.session){closeModal();toast("Check your email to confirm the account, then sign in.");return}
-    user=result.data.user; closeModal(); await refresh(); toast(create?"Account created.":"Signed in.");
+ async function authFormSubmit(create) {
+  const form = $("#authForm");
+  const data = new FormData(form);
+  const email = data.get("email");
+  const password = data.get("password");
+
+  if (!email || !password) {
+    toast("Enter both email and password.");
+    return;
   }
+
+  const result = create
+    ? await supabase.auth.signUp({ email, password })
+    : await supabase.auth.signInWithPassword({ email, password });
+
+  if (result.error) {
+    toast(result.error.message);
+    return;
+  }
+
+  if (create && !result.data.session) {
+    closeModal();
+    toast("Check your email to confirm the account, then sign in.");
+    return;
+  }
+
+  user = result.data.user;
+  closeModal();
+  await refresh();
+  toast(create ? "Account created." : "Signed in.");
+}
 
   async function refresh() {
     if(!user)return;
@@ -704,10 +742,27 @@
   if(supabase){
     supabase.auth.getSession().then(async({data})=>{user=data.session?.user||null;if(user)await refresh();else renderAll()});
     supabase.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;if(user)refresh();else{tracks=[];playlists=[];renderAll()}});
-    document.addEventListener("click",e=>{
-      if(e.target.id==="createAccount")$("#authForm").onsubmit=ev=>{ev.preventDefault();authFormSubmit(true)};
-      if(e.target.closest("#authForm button[type=submit]"))$("#authForm").onsubmit=ev=>{ev.preventDefault();authFormSubmit(false)};
-    });
+  showModal("Sign in to PantherPlay", `
+  <form id="authForm">
+    <p class="muted">Sign in to sync your library and playlists.</p>
+    <input type="email" name="email" placeholder="Email" required autocomplete="username">
+    <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+    <button class="button primary" type="submit">Sign in</button>
+    <button class="button" id="createAccount" type="button"
+      style="width:100%;margin-top:9px">Create account</button>
+  </form>
+`);
+
+const authForm = $("#authForm");
+
+authForm.onsubmit = async event => {
+  event.preventDefault();
+  await authFormSubmit(false);
+};
+
+$("#createAccount").onclick = async () => {
+  await authFormSubmit(true);
+};
   }else{
     renderAll();
     $("#libraryEmpty").textContent="Connect Supabase in the CONFIG section of this file to sign in and sync your library.";
