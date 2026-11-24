@@ -269,7 +269,7 @@
   const $ = (s, root=document) => root.querySelector(s);
   const $$ = (s, root=document) => [...root.querySelectorAll(s)];
   const audio = $("#audio");
-  const isConfigured = SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY !== "sb_publishable_0VTQLxxbXYDt3jBeiUusgA_u7X9e16W";
+  const isConfigured = SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY !== "null";
   const supabase = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
   let user = null, tracks = [], playlists = [], currentPlaylist = null, currentTrack = null;
