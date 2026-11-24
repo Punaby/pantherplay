@@ -1,1723 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PantherPlay</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --p700:#1a0a40;--p600:#2d1070;--p500:#4a1fa8;--p400:#7c3aed;--p300:#a78bfa;--p200:#c4b5fd;
-      --black:#03020a;--surf:#0a0720;--surf2:#110e2e;--surf3:#191540;
-      --fg:#f0ebff;--fg2:#a89bc8;--fg3:#6b5f88;
-      --bdr:rgba(124,58,237,.20);--bdr2:rgba(124,58,237,.40);
-      --star1:rgba(255,255,255,.95);--star2:rgba(196,181,253,.85);
-      --neb1:rgba(124,24,184,.45);--neb2:rgba(124,24,184,.55);
-      --danger:#ff6488;
-    }
-    html{scroll-behavior:smooth;scrollbar-color:#7045ae #0a0720;scrollbar-width:thin}
-    *{scrollbar-color:#7045ae #0a0720;scrollbar-width:thin}
-    *::-webkit-scrollbar{width:10px;height:10px}
-    *::-webkit-scrollbar-track{background:#0a0720;border-radius:20px}
-    *::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#a78bfa,#4a1fa8);border:2px solid #0a0720;border-radius:20px}
-    *::-webkit-scrollbar-thumb:hover{background:#b89cff}
-    body{font-family:"Space Grotesk",sans-serif;background:var(--black);color:var(--fg);min-height:100vh;line-height:1.55;position:relative;overflow-x:hidden}
-    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
-      radial-gradient(2px 2px at 8% 18%,var(--star1),transparent),
-      radial-gradient(3.5px 3.5px at 81% 48%,var(--star2),transparent),
-      radial-gradient(2.5px 2.5px at 14% 69%,var(--star1),transparent),
-      radial-gradient(2px 2px at 47% 22%,var(--star2),transparent),
-      radial-gradient(3px 3px at 69% 88%,var(--star1),transparent),
-      radial-gradient(2px 2px at 92% 14%,var(--star2),transparent),
-      radial-gradient(3.5px 3.5px at 31% 74%,var(--star1),transparent),
-      radial-gradient(2px 2px at 58% 51%,var(--star2),transparent),
-      radial-gradient(2.5px 2.5px at 74% 33%,var(--star1),transparent),
-      radial-gradient(2px 2px at 3% 91%,var(--star2),transparent),
-      radial-gradient(3px 3px at 50% 95%,var(--star1),transparent),
-      radial-gradient(2.5px 2.5px at 96% 62%,var(--star2),transparent)}
-    body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
-      radial-gradient(ellipse 70% 50% at 50% 50%,var(--neb1),transparent),
-      radial-gradient(ellipse 55% 55% at 50% 45%,var(--neb2),transparent),
-      radial-gradient(ellipse 40% 40% at 50% 50%,rgba(67,12,184,.35),transparent)}
-    button,input{font:inherit}
-    button{color:inherit;cursor:pointer}
-    button:focus-visible,input:focus-visible{outline:2px solid var(--p300);outline-offset:3px}
-    .app{position:relative;z-index:1;max-width:1450px;margin:auto;padding:20px 30px 135px}
-    header,main,footer{position:relative;z-index:1}
-    .topbar{position:sticky;top:12px;z-index:20;width:min(1160px,100%);min-height:76px;margin:auto;padding:10px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border:1px solid rgba(220,205,255,.2);border-radius:999px;background:rgba(36,18,70,.38);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 12px 40px #0005}
-    .brand{display:flex;align-items:center;gap:12px;color:var(--fg);text-decoration:none;font-size:20px;font-weight:700}
-    .brand-mark{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#392078,#171033);box-shadow:0 0 26px #7c3aed44;font-size:24px}
-    .nav{display:flex;align-items:center;gap:4px;padding:5px;border:1px solid #ffffff20;border-radius:999px;background:linear-gradient(135deg,#ffffff15,#ffffff04);backdrop-filter:blur(22px) saturate(170%);box-shadow:inset 0 1px #ffffff20,0 8px 28px #0003}
-    .nav button{min-height:44px;padding:0 19px;display:flex;align-items:center;gap:9px;border:0;border-radius:999px;background:transparent;color:var(--fg2);font-weight:600}
-    .nav button:hover{background:#ffffff10;color:white}
-    .nav button.active{background:linear-gradient(135deg,#7c3aed99,#5b2ba177);color:white;box-shadow:inset 0 1px #ffffff30}
-    .account{display:flex;justify-content:flex-end;align-items:center;gap:9px}
-    .avatar,.round-btn{width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--bdr2);border-radius:50%;background:#2b1b8355}
-    .round-btn{font-size:18px}
-    main{width:min(1160px,100%);margin:42px auto 0}
-    .page{display:none}.page.active{display:block}
-    .heading{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}
-    h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:-1.6px}
-    .toolbar{display:flex;align-items:center;gap:9px}
-    .search{width:min(390px,35vw);height:50px;padding:0 15px;display:flex;align-items:center;gap:10px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2e88;color:var(--fg2)}
-    .search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--fg)}
-    .search input::placeholder{color:var(--fg2)}
-    .button{min-height:46px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2e99;color:var(--fg);font-weight:600;transition:.18s}
-    .button:hover{background:#7c3aed33;transform:translateY(-1px)}
-    .button.primary{border-color:transparent;background:linear-gradient(135deg,var(--p500),var(--p400));box-shadow:0 0 24px #7c3aed3b}
-    .button.danger{color:var(--danger)}
-    .button:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .muted{color:var(--fg2);font-size:13px}
-    .track-list{border:1px solid #7c3aed20;border-radius:16px;background:#0a072044}
-    .track-row{position:relative;min-height:76px;padding:10px 14px;display:grid;grid-template-columns:48px minmax(0,1fr) 58px 40px 42px;align-items:center;gap:13px;border-bottom:1px solid #7c3aed17}
-    .track-row:last-child{border-bottom:0}
-    .track-row:hover,.track-row.selected{background:#7c3aed20}
-    .track-row.selected{box-shadow:inset 3px 0 var(--p300)}
-    .art{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#7c3aed,#382077);font-size:20px;cursor:pointer}
-    .track-row.selected .art{outline:2px solid var(--p300)}
-    .track-info{min-width:0;cursor:pointer}
-    .track-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-    .track-artist{color:var(--fg2);font-size:13px}
-    .duration{text-align:right;color:var(--fg2);font-size:13px}
-    .track-control{width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--fg2);font-size:17px}
-    .track-control:hover{background:#7c3aed33;color:white}
-    .more-menu{display:none;position:absolute;z-index:10;right:10px;top:60px;width:220px;padding:7px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f7;box-shadow:0 18px 45px #0008;backdrop-filter:blur(18px)}
-    .more-menu.open{display:block}
-    .more-menu button{width:100%;min-height:42px;padding:0 10px;display:flex;gap:10px;align-items:center;text-align:left;border:0;border-radius:8px;background:transparent}
-    .more-menu button:hover{background:#7c3aed33}.more-menu .danger{color:var(--danger)}
-    .tools{display:none;position:absolute;z-index:25;right:0;top:74px;width:245px;padding:12px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f5;box-shadow:0 18px 45px #0008}
-    .tools.open{display:block}.tools h3{padding:5px 8px 9px;color:var(--fg2);font:700 11px "Space Mono";letter-spacing:2px}
-    .tools button{width:100%;padding:10px 8px;border:0;border-radius:8px;text-align:left;background:transparent}
-    .tools button:hover{background:#7c3aed33}
-    .selection{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;border:1px solid var(--bdr2);border-radius:12px;background:#110e2ecc}
-    .selection[hidden]{display:none}.selection .count{margin-right:auto;color:var(--fg2)}
-    .playlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
-    .playlist-tile{padding:16px;border:1px solid var(--bdr);border-radius:16px;background:#110e2ebd;text-align:left}
-    .playlist-tile:hover{border-color:var(--bdr2);transform:translateY(-2px)}
-    .playlist-art{aspect-ratio:1.5;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#4a1fa8,#7c3aed 60%,#a33bc1);font-size:34px}
-    .playlist-tile h3{margin-top:12px}
-    .eyebrow{color:var(--fg2);font:700 12px "Space Mono";letter-spacing:3px}
-    .back{margin-bottom:15px;border:0;background:transparent;color:var(--fg2)}
-    .playlist-hero{display:grid;grid-template-columns:160px 1fr;align-items:center;gap:24px;margin-bottom:20px;padding:24px;border:1px solid var(--bdr);border-radius:18px;background:#110e2ec9}
-    .playlist-hero .playlist-art{width:160px;aspect-ratio:1}
-    .playlist-hero h2{margin:6px 0;font-size:42px;line-height:1.1}
-    .playlist-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-    .section{min-height:250px;border:1px solid var(--bdr);border-radius:16px;background:#110e2e77}
-    .section h3{padding:16px 19px;border-bottom:1px solid var(--bdr)}
-    .empty{min-height:190px;display:grid;place-items:center;padding:25px;text-align:center}
-    .empty p{margin:7px 0 13px;color:var(--fg2)}
-
-    .tools-popover-note{padding:7px 8px 10px;color:var(--fg2);font-size:11px}
-    .modal-backdrop{display:none;position:fixed;z-index:100;inset:0;place-items:center;padding:18px;background:#03020ad9;backdrop-filter:blur(7px)}
-    .modal-backdrop.open{display:grid}
-    .modal{width:min(520px,100%);max-height:92vh;overflow:auto;padding:21px;border:1px solid var(--bdr2);border-radius:17px;background:#100d2b;box-shadow:0 30px 90px #0009}
-    .modal.upload-modal{width:min(900px,100%)}
-    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
-    .modal-close{border:0;background:transparent;color:var(--fg2);font-size:24px}
-    #modal input[type=text],#modal input[type=email],#modal input[type=password]{
-      display:block;width:100%;min-height:48px;margin:8px 0;padding:0 14px;
-      border:1px solid var(--bdr2);border-radius:12px;background:rgba(3,2,10,.88);
-      color:var(--fg);font:500 16px "Space Grotesk",sans-serif;box-shadow:inset 0 1px 5px #0005
-    }
-    #modal input::placeholder{color:var(--fg2);opacity:1}
-    #modal input:focus{border-color:var(--p300);box-shadow:0 0 0 3px #7c3aed33}
-    .drop-zone{min-height:145px;display:grid;place-items:center;padding:20px;border:1px dashed var(--p300);border-radius:16px;background:#7c3aed0d;text-align:center;cursor:pointer}
-    .drop-zone.dragging{background:#7c3aed30}
-    .drop-zone strong{display:block;font-size:19px}.drop-zone span{color:var(--fg2)}
-    .folder-prompt,.mode-box,.upload-meta{margin-top:12px;padding:13px;border:1px solid var(--bdr);border-radius:13px;background:#0a072088}
-    .folder-prompt{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .mode-box h3{margin-bottom:9px}
-    .mode-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .mode-options label{padding:13px;border:1px solid var(--bdr2);border-radius:12px;cursor:pointer}
-    .mode-options label:has(input:checked){background:#7c3aed44}
-    .mode-options input{accent-color:var(--p400);margin-right:7px}
-    .metadata-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-    .field label{display:block;margin-bottom:5px}
-    .field input{width:100%;height:44px;padding:0 11px;border:1px solid var(--bdr2);border-radius:10px;background:var(--black);color:var(--fg)}
-    .queue-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:15px 0 8px;color:var(--fg2);font:700 12px "Space Mono";letter-spacing:1px}
-    .queue-head .queue-count{margin-right:auto}
-    .queue{max-height:240px;overflow:auto;display:grid;gap:6px}
-    .queue-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:#110e2eaa}
-    .queue-item small{display:block;color:var(--fg2);overflow-wrap:anywhere}
-    .queue-item button{flex:none;border:0;background:transparent;color:var(--fg2)}
-    .queue-status{color:var(--p200)}
-    .choice-list{max-height:280px;overflow:auto;margin:8px 0}
-    .choice{display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;color:var(--fg2)}
-    .choice:hover{background:#7c3aed1f}.choice input{accent-color:var(--p400)}
-    footer.player{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be0;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
-    footer.player.collapsed{transform:translate(-50%,calc(100% - 12px))}
-    .player-toggle{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:48px;height:20px;border:1px solid var(--bdr2);border-bottom:0;border-radius:12px 12px 0 0;background:#100d2bf5;color:transparent;font-size:0}
-    .player-toggle::before{content:"";display:block;width:18px;height:3px;margin:7px auto;border-radius:999px;background:#c4b5fd99}
-    .now-playing{display:flex;align-items:center;gap:10px;min-width:0}
-    .now-art{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#7c3aed,#382077)}
-    .now-copy{min-width:0}.now-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}.now-artist{color:var(--fg2);font-size:12px}
-    .player-controls{display:grid;grid-template-columns:34px 42px 34px 40px minmax(60px,1fr) 40px;gap:6px;align-items:center}
-    .player-controls button,.volume button{border:0;background:transparent;color:var(--fg2)}
-    .player-controls .play{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--p500),var(--p400));color:white}
-    .player-time{color:var(--fg2);font-size:12px;white-space:nowrap}
-    input[type=range]{width:100%;accent-color:var(--p300)}
-    .volume{display:flex;align-items:center;gap:8px}
-    .toast{position:fixed;z-index:150;left:50%;bottom:110px;transform:translate(-50%,10px);opacity:0;pointer-events:none;padding:10px 16px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2ef5;transition:.2s}
-    .toast.show{opacity:1;transform:translate(-50%,0)}
-    @media(max-width:850px){
-      .app{padding:12px 14px 120px}.topbar{grid-template-columns:auto 1fr auto;min-height:65px;padding:8px 10px}
-      .brand-name{display:none}.brand-mark{width:42px;height:42px}.nav button{padding:0 13px}
-      .heading{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.search{width:auto;flex:1}
-      footer.player{grid-template-columns:minmax(120px,1fr) minmax(210px,1.3fr)}.volume{display:none}
-    }
-    @media(max-width:560px){
-      .nav button{padding:0 12px}.nav-label{display:none}.account .round-btn{display:none}
-      .track-row{grid-template-columns:42px minmax(0,1fr) 34px 34px;gap:7px;padding:8px}
-      .track-row .duration{display:none}.art{width:40px;height:40px}
-      .metadata-fields,.mode-options{grid-template-columns:1fr}
-      .folder-prompt{align-items:flex-start;flex-direction:column}
-      footer.player{width:calc(100% - 18px);bottom:7px;min-height:72px;grid-template-columns:minmax(90px,1fr) 180px;padding:8px;gap:6px}
-      .now-art{width:39px;height:39px}.now-title{font-size:12px}
-      .player-controls{grid-template-columns:35px 36px 35px minmax(45px,1fr);gap:4px}
-      .player-controls .prev,.player-controls .next,.player-time.end{display:none}
-      .player-controls .play{width:36px;height:36px}
-      .playlist-hero{grid-template-columns:90px minmax(0,1fr);gap:13px;padding:14px}
-      .playlist-hero .playlist-art{width:90px}.playlist-hero h2{font-size:28px}
-    }
-    /* Edit track details form */
-#editForm {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-#editForm input {
-  width: 100%;
-  min-width: 0;
-  height: 54px;
-  margin: 0 !important;
-  padding: 0 15px !important;
-  color: var(--fg) !important;
-  background: rgba(3, 2, 10, .82) !important;
-  border: 1px solid var(--bdr2) !important;
-  border-radius: 12px !important;
-  font: 500 16px "Space Grotesk", sans-serif !important;
-  box-shadow: inset 0 1px 5px rgba(0, 0, 0, .28);
-  color-scheme: dark;
-}
-
-#editForm input::placeholder {
-  color: var(--fg2) !important;
-  opacity: 1;
-}
-
-#editForm input:focus {
-  outline: none;
-  border-color: var(--p300) !important;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, .2);
-}
-
-#editForm button[type="submit"] {
-  grid-column: 1 / -1;
-  width: 100%;
-  min-height: 52px;
-  margin-top: 2px !important;
-  border: 0;
-  border-radius: 999px;
-  color: white;
-  background: linear-gradient(135deg, var(--p500), var(--p400));
-  font-weight: 700;
-}
-
-@media (max-width: 520px) {
-  #editForm {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  #editForm button[type="submit"] {
-    grid-column: auto;
-  }
-}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherPlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--p700:#1a0a40;--p600:#2d1070;--p500:#4a1fa8;--p400:#7c3aed;--p300:#a78bfa;--p200:#c4b5fd;--black:#03020a;--surf:#0a0720;--surf2:#110e2e;--surf3:#191540;--fg:#f0ebff;--fg2:#a89bc8;--fg3:#6b5f88;--bdr:rgba(124,58,237,.2);--bdr2:rgba(124,58,237,.4);--danger:#ff6488}
+html,*{scrollbar-color:#7045ae #0a0720;scrollbar-width:thin}
+*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:#0a0720}*::-webkit-scrollbar-thumb{background:linear-gradient(#a78bfa,#4a1fa8);border:2px solid #0a0720;border-radius:20px}
+body{font-family:"Space Grotesk",sans-serif;background:var(--black);color:var(--fg);min-height:100vh;line-height:1.55;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(2px 2px at 8% 18%,#fff,transparent),radial-gradient(3px 3px at 81% 48%,#c4b5fd,transparent),radial-gradient(2px 2px at 47% 22%,#c4b5fd,transparent),radial-gradient(3px 3px at 69% 88%,#fff,transparent)}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(124,24,184,.35),transparent),radial-gradient(ellipse 40% 40% at 50% 50%,rgba(67,12,184,.28),transparent)}
+button,input{font:inherit}button{color:inherit;cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--p300);outline-offset:3px}
+.app{position:relative;z-index:1;max-width:1450px;margin:auto;padding:20px 30px 135px}
+.topbar{position:sticky;top:12px;z-index:20;width:min(1160px,100%);min-height:76px;margin:auto;padding:10px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border:1px solid #dccdff33;border-radius:999px;background:#24124666;backdrop-filter:blur(24px) saturate(170%);box-shadow:inset 0 1px #ffffff22,0 12px 40px #0005}
+.brand{display:flex;align-items:center;gap:12px;color:var(--fg);text-decoration:none;font-size:20px;font-weight:700}.brand-mark{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#392078,#171033);font-size:24px}
+.nav{display:flex;gap:4px;padding:5px;border:1px solid #ffffff20;border-radius:999px;background:linear-gradient(135deg,#ffffff15,#ffffff04);backdrop-filter:blur(22px) saturate(170%)}
+.nav button{min-height:44px;padding:0 19px;display:flex;align-items:center;gap:9px;border:0;border-radius:999px;background:transparent;color:var(--fg2);font-weight:600}.nav button.active{background:#7c3aed88;color:white}
+.account{display:flex;justify-content:flex-end;gap:9px}.avatar,.round{width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--bdr2);border-radius:50%;background:#2b1b8355}
+main{position:relative;width:min(1160px,100%);margin:42px auto 0}.page{display:none}.page.active{display:block}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:-1.6px}
+.toolbar{display:flex;align-items:center;gap:9px}.search{width:min(390px,35vw);height:50px;padding:0 15px;display:flex;align-items:center;gap:10px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2eaa;color:var(--fg2)}
+.search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--fg)}.search input::placeholder{color:var(--fg2)}
+.button{min-height:44px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2eaa;color:var(--fg);font-weight:600}.button:hover{background:#7c3aed44}.button.primary{border-color:transparent;background:linear-gradient(135deg,var(--p500),var(--p400))}.button.danger{color:var(--danger)}.button:disabled{opacity:.45;cursor:not-allowed}
+.muted{color:var(--fg2);font-size:13px}.track-list{border:1px solid #7c3aed22;border-radius:16px;background:#0a072044}
+.track-row{position:relative;min-height:76px;padding:10px 14px;display:grid;grid-template-columns:48px minmax(0,1fr) 58px 40px 42px;align-items:center;gap:13px;border-bottom:1px solid #7c3aed18}
+.track-row:last-child{border-bottom:0}.track-row:hover,.track-row.selected{background:#7c3aed22}.track-row.selected{box-shadow:inset 3px 0 var(--p300)}
+.art{width:46px;height:46px;display:grid;place-items:center;border:0;border-radius:13px;background:linear-gradient(145deg,#7c3aed,#382077);font-size:20px}
+.track-info{min-width:0;cursor:pointer}.track-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.track-artist{color:var(--fg2);font-size:13px}.duration{text-align:right;color:var(--fg2);font-size:13px}
+.track-control{width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--fg2)}.track-control:hover{background:#7c3aed44;color:white}.track-control.cached{color:var(--p300)}
+.more-menu{display:none;position:absolute;z-index:10;right:10px;top:60px;width:220px;padding:7px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f7;box-shadow:0 18px 45px #0008}
+.more-menu.open{display:block}.more-menu button{width:100%;min-height:42px;padding:0 10px;display:flex;align-items:center;text-align:left;border:0;border-radius:8px;background:transparent}.more-menu button:hover{background:#7c3aed33}.more-menu .danger{color:var(--danger)}
+.tools{display:none;position:absolute;z-index:25;right:0;top:74px;width:250px;padding:12px;border:1px solid var(--bdr2);border-radius:14px;background:#0a0720f5}.tools.open{display:block}.tools h3{padding:5px 8px;color:var(--fg2);font:700 11px "Space Mono";letter-spacing:2px}.tools button{width:100%;padding:10px 8px;border:0;border-radius:8px;text-align:left;background:transparent}.tools button:hover{background:#7c3aed33}
+.selection{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding:10px 14px;border:1px solid var(--bdr2);border-radius:12px;background:#110e2ecc}.selection[hidden]{display:none}.selection .count{margin-right:auto;color:var(--fg2)}
+.playlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}.playlist-tile{padding:16px;border:1px solid var(--bdr);border-radius:16px;background:#110e2ebd;text-align:left}.playlist-art{aspect-ratio:1.5;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#4a1fa8,#7c3aed 60%,#a33bc1);font-size:34px}.playlist-tile h3{margin-top:12px}
+.eyebrow{color:var(--fg2);font:700 12px "Space Mono";letter-spacing:3px}.back{margin-bottom:15px;border:0;background:transparent;color:var(--fg2)}.playlist-hero{display:grid;grid-template-columns:160px 1fr;align-items:center;gap:24px;margin-bottom:20px;padding:24px;border:1px solid var(--bdr);border-radius:18px;background:#110e2ec9}.playlist-hero .playlist-art{width:160px;aspect-ratio:1}.playlist-hero h2{margin:6px 0;font-size:40px}.playlist-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.section{min-height:230px;border:1px solid var(--bdr);border-radius:16px;background:#110e2e77}.section h3{padding:16px 19px;border-bottom:1px solid var(--bdr)}.empty{min-height:180px;display:grid;place-items:center;padding:25px;text-align:center}.empty p{margin:7px 0 13px;color:var(--fg2)}
+.modal-backdrop{display:none;position:fixed;z-index:100;inset:0;place-items:center;padding:18px;background:#03020ad9;backdrop-filter:blur(7px)}.modal-backdrop.open{display:grid}.modal{width:min(540px,100%);max-height:92vh;overflow:auto;padding:21px;border:1px solid var(--bdr2);border-radius:17px;background:#100d2b;box-shadow:0 30px 90px #0009}.modal.wide{width:min(900px,100%)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.modal-close{border:0;background:transparent;color:var(--fg2);font-size:24px}
+#modal input[type=text],#modal input[type=email],#modal input[type=password],#modal input[type=datetime-local],#modal select{width:100%;min-height:46px;margin:7px 0;padding:0 12px;border:1px solid var(--bdr2);border-radius:11px;background:#03020a;color:var(--fg);color-scheme:dark}
+.drop-zone{min-height:135px;display:grid;place-items:center;padding:20px;border:1px dashed var(--p300);border-radius:16px;background:#7c3aed0d;text-align:center;cursor:pointer}.drop-zone strong{display:block;font-size:19px}.drop-zone span{color:var(--fg2)}
+.panel{margin-top:12px;padding:13px;border:1px solid var(--bdr);border-radius:13px;background:#0a072088}.mode-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.mode-options label{padding:12px;border:1px solid var(--bdr2);border-radius:12px;cursor:pointer}.mode-options label:has(input:checked){background:#7c3aed44}.mode-options input{accent-color:var(--p400);margin-right:7px}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.fields label{font-size:13px}.fields input{width:100%;height:42px;margin-top:4px;padding:0 10px;border:1px solid var(--bdr2);border-radius:9px;background:var(--black);color:var(--fg)}
+.queue-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:14px 0 8px}.queue-head .queue-count{margin-right:auto;color:var(--fg2);font:700 12px "Space Mono"}.queue{max-height:220px;overflow:auto;display:grid;gap:6px}.queue-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:#110e2eaa}.queue-item small{display:block;color:var(--fg2);overflow-wrap:anywhere}.queue-item button{border:0;background:transparent;color:var(--fg2)}.queue-status{color:var(--p200)}
+footer.player{position:fixed;z-index:30;left:50%;bottom:12px;transform:translateX(-50%);width:min(1280px,calc(100% - 32px));min-height:82px;padding:12px 17px;display:grid;grid-template-columns:minmax(180px,320px) minmax(260px,1fr) minmax(130px,190px);gap:18px;align-items:center;border:1px solid #ffffff28;border-radius:18px;background:#100d2be8;backdrop-filter:blur(24px);box-shadow:0 15px 50px #0008;transition:transform .28s}
+footer.player.collapsed{transform:translate(-50%,calc(100% - 12px))}.player-toggle{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:48px;height:20px;border:1px solid var(--bdr2);border-bottom:0;border-radius:12px 12px 0 0;background:#100d2bf5}.player-toggle:after{content:"";display:block;width:18px;height:3px;margin:7px auto;border-radius:9px;background:#c4b5fd99}
+.now-playing{display:flex;align-items:center;gap:10px;min-width:0}.now-art{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#7c3aed,#382077)}.now-copy{min-width:0}.now-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.now-artist{color:var(--fg2);font-size:12px}
+.player-controls{display:grid;grid-template-columns:34px 42px 34px 40px minmax(60px,1fr) 40px;gap:6px;align-items:center}.player-controls button,.volume button{border:0;background:transparent;color:var(--fg2)}.player-controls .play{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--p500),var(--p400));color:white}.player-time{color:var(--fg2);font-size:12px;white-space:nowrap}input[type=range]{width:100%;accent-color:var(--p300)}.volume{display:flex;align-items:center;gap:8px}
+.toast{position:fixed;z-index:150;left:50%;bottom:110px;transform:translate(-50%,10px);opacity:0;pointer-events:none;padding:10px 16px;border:1px solid var(--bdr2);border-radius:999px;background:#110e2ef5;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:850px){.app{padding:12px 14px 120px}.topbar{grid-template-columns:auto 1fr auto;min-height:65px;padding:8px 10px}.brand-name{display:none}.brand-mark{width:42px;height:42px}.nav button{padding:0 13px}.heading{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.search{width:auto;flex:1}footer.player{grid-template-columns:minmax(120px,1fr) minmax(210px,1.3fr)}.volume{display:none}}
+@media(max-width:560px){.nav button{padding:0 12px}.nav-label{display:none}.account .round{display:none}.track-row{grid-template-columns:42px minmax(0,1fr) 34px 34px;gap:7px;padding:8px}.track-row .duration{display:none}.art{width:40px;height:40px}.fields,.mode-options{grid-template-columns:1fr}.playlist-hero{grid-template-columns:90px minmax(0,1fr);gap:13px;padding:14px}.playlist-hero .playlist-art{width:90px}.playlist-hero h2{font-size:28px}footer.player{width:calc(100% - 18px);bottom:7px;min-height:72px;grid-template-columns:minmax(90px,1fr) 180px;padding:8px;gap:6px}.now-art{width:39px;height:39px}.now-title{font-size:12px}.player-controls{grid-template-columns:35px 36px 35px minmax(45px,1fr);gap:4px}.player-controls .prev,.player-controls .next,.player-time.end{display:none}.player-controls .play{width:36px;height:36px}}
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <a class="brand" href="#" aria-label="PantherPlay home"><span class="brand-mark">🐾</span><span class="brand-name">PantherPlay</span></a>
-    <nav class="nav" aria-label="Main navigation">
-      <button class="active" data-page="library"><span>▥</span><span class="nav-label">Library</span></button>
-      <button data-page="playlists"><span>☷</span><span class="nav-label">Playlists</span></button>
-      <button data-page="offline"><span>⇩</span><span class="nav-label">Offline</span></button>
-    </nav>
-    <div class="account"><button class="avatar" id="accountButton" aria-label="Account">?</button><button class="round-btn" id="signOutButton" title="Sign out" aria-label="Sign out">↪</button></div>
-  </header>
-
-  <main>
-    <section class="page active" id="libraryPage">
-      <div class="heading">
-        <div><h1>Library</h1><p class="muted" id="libraryCount">0 tracks</p></div>
-        <div class="toolbar">
-          <label class="search">⌕ <input id="librarySearch" placeholder="Search tracks, artists, albums"></label>
-          <button class="button" id="actionsButton">☷ <span>Actions</span></button>
-          <button class="button primary" id="uploadButton">↑ Upload tracks</button>
-        </div>
-      </div>
-      <div class="tools" id="tools">
-        <h3>LIBRARY TOOLS</h3>
-        <button data-tool="fix">✦ &nbsp; Fix names</button>
-        <button data-tool="duplicates">▧ &nbsp; Find duplicates</button>
-        <button data-tool="durations">◷ &nbsp; Fix missing lengths</button>
-        <button data-tool="mass-delete">☑ &nbsp; Mass delete</button>
-      </div>
-      <div class="selection" id="selectionBar" hidden>
-        <span class="count" id="selectionCount">0 selected</span>
-        <button class="button" id="selectAllTracks">Select all</button>
-        <button class="button" id="cancelSelection">Cancel</button>
-        <button class="button danger" id="deleteSelected" disabled>Delete selected</button>
-      </div>
-      <div class="track-list" id="libraryTracks"></div>
-      <div class="muted" id="libraryEmpty" style="padding:25px;text-align:center">Sign in to load your library.</div>
-    </section>
-
-    <section class="page" id="playlistsPage">
-      <div id="playlistBrowser">
-        <div class="heading"><div><div class="eyebrow">YOUR COLLECTION</div><h1>Playlists</h1></div><button class="button primary" id="newPlaylist">＋ New playlist</button></div>
-        <div class="playlist-grid" id="playlistGrid"></div>
-      </div>
-      <div id="playlistDetail" hidden>
-        <button class="back" id="backPlaylists">← &nbsp; All playlists</button>
-        <div class="playlist-hero">
-          <div class="playlist-art">♪</div>
-          <div><div class="eyebrow">PLAYLIST</div><h2 id="detailName"></h2><div class="muted" id="detailMeta"></div>
-            <div class="playlist-actions">
-              <button class="button primary" id="playAll">▷ Play all</button>
-              <button class="button" id="shufflePlaylist">⤨ Shuffle</button>
-              <button class="button" id="addPlaylistTracks">＋ Add tracks</button>
-              <button class="button" id="savePlaylistOffline">⇩ Save offline</button>
-              <button class="button" id="sharePlaylist">⌯ Share</button>
-              <button class="button danger" id="deletePlaylist">♲</button>
-            </div>
-          </div>
-        </div>
-        <div class="section"><h3>Tracks</h3><div id="detailTracks"></div><div class="empty" id="playlistEmpty"><div><strong>This playlist is empty</strong><p>Add tracks from your library to fill it up.</p><button class="button primary" id="emptyAddTracks">＋ Add tracks</button></div></div></div>
-      </div>
-    </section>
-
-    <section class="page" id="offlinePage">
-      <div class="heading"><h1>Offline</h1><label class="search">⌕ <input id="offlineSearch" placeholder="Search offline tracks"></label></div>
-      <div class="track-list" id="offlineTracks"></div>
-      <div class="muted" id="offlineEmpty" style="padding:25px;text-align:center">No tracks saved for offline listening.</div>
-    </section>
-  </main>
+<header class="topbar">
+  <a class="brand" href="#"><span class="brand-mark">🐾</span><span class="brand-name">PantherPlay</span></a>
+  <nav class="nav"><button class="active" data-page="library">▥ <span class="nav-label">Library</span></button><button data-page="playlists">☷ <span class="nav-label">Playlists</span></button><button data-page="offline">⇩ <span class="nav-label">Offline</span></button></nav>
+  <div class="account"><button class="avatar" id="accountButton">?</button><button class="round" id="signOut" title="Sign out">↪</button></div>
+</header>
+<main>
+<section class="page active" id="libraryPage">
+  <div class="heading"><div><h1>Library</h1><p class="muted" id="libraryCount">0 tracks</p></div><div class="toolbar"><label class="search">⌕ <input id="librarySearch" placeholder="Search tracks, artists, albums"></label><button class="button" id="actionsButton">☷ Actions</button><button class="button primary" id="uploadButton">↑ Upload tracks</button></div></div>
+  <div class="tools" id="tools"><h3>LIBRARY TOOLS</h3><button data-tool="fix">✦ Fix names</button><button data-tool="duplicates">▧ Find duplicates</button><button data-tool="durations">◷ Fix missing lengths</button><button data-tool="mass-delete">☑ Mass delete</button></div>
+  <div class="selection" id="selection" hidden><span class="count" id="selectedCount">0 selected</span><button class="button" id="selectAll">Select all</button><button class="button" id="cancelSelect">Cancel</button><button class="button danger" id="deleteSelected" disabled>Delete selected</button></div>
+  <div class="track-list" id="libraryTracks"></div><div class="muted" id="libraryEmpty" style="padding:25px;text-align:center"></div>
+</section>
+<section class="page" id="playlistsPage">
+  <div id="playlistBrowser"><div class="heading"><div><div class="eyebrow">YOUR COLLECTION</div><h1>Playlists</h1></div><button class="button primary" id="newPlaylist">＋ New playlist</button></div><div class="playlist-grid" id="playlistGrid"></div></div>
+  <div id="playlistDetail" hidden><button class="back" id="backPlaylists">← All playlists</button><div class="playlist-hero"><div class="playlist-art">♪</div><div><div class="eyebrow">PLAYLIST</div><h2 id="detailName"></h2><div class="muted" id="detailMeta"></div><div class="playlist-actions"><button class="button primary" id="playAll">▷ Play all</button><button class="button" id="shuffle">⤨ Shuffle</button><button class="button" id="addPlaylistTracks">＋ Add tracks</button><button class="button" id="savePlaylistOffline">⇩ Save offline</button><button class="button danger" id="deletePlaylist">♲</button></div></div></div><div class="section"><h3>Tracks</h3><div id="detailTracks"></div><div class="empty" id="playlistEmpty"><div><strong>This playlist is empty</strong><p>Add tracks from your library.</p><button class="button primary" id="emptyAdd">＋ Add tracks</button></div></div></div></div>
+</section>
+<section class="page" id="offlinePage">
+  <div class="heading"><div><h1>Offline</h1><p class="muted" id="offlineSummary">Cached audio stays in this browser.</p></div><div class="toolbar"><label class="search">⌕ <input id="offlineSearch" placeholder="Search offline tracks"></label><button class="button danger" id="offloadAll">Offload all</button></div></div>
+  <div class="track-list" id="offlineTracks"></div><div class="empty" id="offlineEmpty">No audio cached yet. Use the download icon on a track, or schedule a download.</div>
+</section>
+</main>
 </div>
-
-<footer class="player collapsed" id="player">
-  <button class="player-toggle" id="playerToggle" aria-label="Expand player" title="Expand player"></button>
-  <div class="now-playing"><div class="now-art">♪</div><div class="now-copy"><div class="now-title" id="nowTitle">Nothing playing</div><div class="now-artist" id="nowArtist">PantherPlay</div></div></div>
-  <div class="player-controls">
-    <button class="prev" id="previous" aria-label="Previous">|‹</button><button class="play" id="playPause" aria-label="Play or pause">▷</button><button class="next" id="next" aria-label="Next">›|</button>
-    <span class="player-time" id="currentTime">0:00</span><input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek"><span class="player-time end" id="duration">0:00</span>
-  </div>
-  <div class="volume"><button id="mute" aria-label="Mute">◖</button><input id="volume" type="range" min="0" max="1" step=".01" value=".7" aria-label="Volume"></div>
-</footer>
-<audio id="audio" preload="metadata"></audio>
-<div class="toast" id="toast" role="status"></div>
-
-<div class="modal-backdrop" id="modalBackdrop">
-  <section class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-head"><h2 id="modalTitle">PantherPlay</h2><button class="modal-close" id="modalClose" aria-label="Close">×</button></div>
-    <div id="modalBody"></div>
-  </section>
-</div>
+<footer class="player collapsed" id="player"><button class="player-toggle" id="playerToggle" aria-label="Expand player"></button><div class="now-playing"><div class="now-art">♪</div><div class="now-copy"><div class="now-title" id="nowTitle">Nothing playing</div><div class="now-artist" id="nowArtist">PantherPlay</div></div></div><div class="player-controls"><button class="prev" id="previous">|‹</button><button class="play" id="playPause">▷</button><button class="next" id="next">›|</button><span class="player-time" id="currentTime">0:00</span><input id="seek" type="range" min="0" max="100" value="0"><span class="player-time end" id="duration">0:00</span></div><div class="volume"><button id="mute">◖</button><input id="volume" type="range" min="0" max="1" step=".01" value=".7"></div></footer>
+<audio id="audio" preload="metadata"></audio><div class="toast" id="toast" role="status"></div>
+<div class="modal-backdrop" id="backdrop"><section class="modal" id="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2 id="modalTitle"></h2><button class="modal-close" id="modalClose">×</button></div><div id="modalBody"></div></section></div>
 
 <script>
 (() => {
-  "use strict";
-
-  // Use the Supabase project URL and browser-safe publishable key.
-  // Never put a Supabase secret key in this file.
-  const SUPABASE_URL = "https://tnccxiwnntsneshgvkxi.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0VTQLxxbXYDt3jBeiUusgA_u7X9e16W";
-  const BUCKET = "audio";
-  const HASH_CHUNK_BYTES = 4 * 1024 * 1024;
-  const $ = (selector, root=document) => root.querySelector(selector);
-  const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
-  const audio = $("#audio");
-
-  // If a form previously submitted credentials into the URL, remove query parameters
-  // from the visible address bar. This does not undo exposure; change that password.
-  if (location.search && /(?:email|password)=/i.test(location.search)) {
-    history.replaceState(null, "", location.pathname + location.hash);
-  }
-
-  const configured =
-    SUPABASE_URL.startsWith("https://") &&
-    SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_");
-
-  const supabase = configured && window.supabase
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
-    : null;
-
-  let user = null;
-  let tracks = [];
-  let playlists = [];
-  let currentPlaylistId = null;
-  let currentTrackId = null;
-  let playQueue = [];
-  let selectionMode = false;
-  const selectedIds = new Set();
-  let uploadQueue = [];
-  let duplicateIds = new Set();
-  let duplicateReasons = new Map();
-  let duplicateScanComplete = false;
-  let duplicateViewOnly = false;
-  const fileHashCache = new WeakMap();
-  let toastTimer;
-
-  function toast(message) {
-    const node = $("#toast");
-    node.textContent = message;
-    node.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => node.classList.remove("show"), 3200);
-  }
-
-  function esc(value="") {
-    return String(value).replace(/[&<>"']/g, char => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    })[char]);
-  }
-
-  function formatTime(seconds) {
-    const value = Number(seconds);
-    if (!Number.isFinite(value) || value <= 0) return "—";
-    const mins = Math.floor(value / 60);
-    const secs = String(Math.floor(value % 60)).padStart(2, "0");
-    return `${mins}:${secs}`;
-  }
-
-  function formatPlaylistDuration(seconds) {
-    if (!seconds) return "Duration unavailable";
-    const totalMinutes = Math.round(seconds / 60);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return hours ? `${hours} hr ${minutes} min` : `${totalMinutes} min`;
-  }
-
-  function setPlayerCollapsed(collapsed) {
-    $("#player").classList.toggle("collapsed", collapsed);
-    $("#playerToggle").setAttribute("aria-label", collapsed ? "Expand player" : "Collapse player");
-    $("#playerToggle").title = collapsed ? "Expand player" : "Collapse player";
-  }
-
-  function showModal(title, html, wide=false) {
-    $("#modalTitle").textContent = title;
-    $("#modalBody").innerHTML = html;
-    $("#modal").classList.toggle("upload-modal", wide);
-    $("#modalBackdrop").classList.add("open");
-  }
-
-  function closeModal() {
-    $("#modalBackdrop").classList.remove("open");
-    $("#modal").classList.remove("upload-modal");
-  }
-
-  function showSetupNotice() {
-    showModal("Connect Supabase", `<p class="muted">Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY near the top of this file, then apply the Supabase database and Storage setup.</p>`);
-  }
-
-  async function submitAuth(createAccount) {
-    const form = $("#authForm");
-    if (!form || !supabase) return;
-
-    const data = new FormData(form);
-    const email = String(data.get("email") || "").trim();
-    const password = String(data.get("password") || "");
-
-    if (!email || !password) {
-      toast("Enter your email and password.");
-      return;
-    }
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    submitButton.textContent = createAccount ? "Creating account…" : "Signing in…";
-
-    try {
-      const result = createAccount
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password });
-
-      if (result.error) {
-        toast(result.error.message);
-        return;
-      }
-
-      if (createAccount && !result.data.session) {
-        closeModal();
-        toast("Check your email to confirm the account, then sign in.");
-        return;
-      }
-
-      user = result.data.user;
-      closeModal();
-      await refreshData();
-      toast(createAccount ? "Account created." : "Signed in.");
-    } catch (error) {
-      toast(error.message || "Authentication failed.");
-    } finally {
-      if (submitButton.isConnected) {
-        submitButton.disabled = false;
-        submitButton.textContent = createAccount ? "Create account" : "Sign in";
-      }
-    }
-  }
-
-  function showAuthModal() {
-    if (!supabase) {
-      showSetupNotice();
-      return;
-    }
-
-    showModal("Sign in to PantherPlay", `
-      <form id="authForm" method="post" autocomplete="on">
-        <p class="muted">Sign in to sync your library and playlists.</p>
-        <input type="email" name="email" placeholder="Email" required autocomplete="username">
-        <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
-        <button class="button primary" type="submit" style="width:100%;margin-top:8px">Sign in</button>
-        <button class="button" type="button" id="createAccount" style="width:100%;margin-top:9px">Create account</button>
-      </form>
-    `);
-
-    const form = $("#authForm");
-
-    // Attach directly after insertion; prevent native form submission so credentials
-    // are never appended as query parameters to the page URL.
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      submitAuth(false);
-    });
-
-    $("#createAccount").addEventListener("click", () => submitAuth(true));
-  }
-
-  async function requireUser() {
-    if (user) return true;
-    if (!supabase) {
-      showSetupNotice();
-      return false;
-    }
-    showAuthModal();
-    return false;
-  }
-
-  async function refreshData() {
-    if (!user || !supabase) {
-      tracks = [];
-      playlists = [];
-      renderAll();
-      return;
-    }
-
-    const [trackResult, playlistResult] = await Promise.all([
-      supabase.from("tracks").select("*").order("title"),
-      supabase.from("playlists").select("*").order("name")
-    ]);
-
-    if (trackResult.error || playlistResult.error) {
-      toast((trackResult.error || playlistResult.error).message);
-      return;
-    }
-
-    tracks = trackResult.data || [];
-    playlists = playlistResult.data || [];
-
-    const linkResult = await supabase
-      .from("playlist_tracks")
-      .select("playlist_id,track_id,position")
-      .order("position");
-
-    if (linkResult.error) {
-      toast(linkResult.error.message);
-      return;
-    }
-
-    playlists.forEach(playlist => {
-      playlist.trackIds = (linkResult.data || [])
-        .filter(link => link.playlist_id === playlist.id)
-        .map(link => link.track_id);
-    });
-
-    renderAll();
-  }
-
-  async function getSignedAudioUrl(track) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(track.storage_path, 3600);
-
-    if (error) throw error;
-    return data.signedUrl;
-  }
-
-  function renderTracks(container, list, mode="library") {
-    container.innerHTML = "";
-
-    list.forEach(track => {
-      const row = document.createElement("article");
-      row.className =
-        "track-row" +
-        (track.id === currentTrackId ? " current" : "") +
-        (selectedIds.has(track.id) ? " selected" : "");
-
-      const offline = localStorage.getItem("pp-offline-" + track.id) === "1";
-      row.innerHTML = `
-        <button class="art" type="button" title="${selectionMode && mode === "library" ? "Toggle selection" : "Play"}">♪</button>
-        <div class="track-info" tabindex="0">
-          <div class="track-title">${esc(track.title)}</div>
-          <div class="track-artist">${esc(track.artist || "Unknown artist")}</div>
-        </div>
-        <div class="duration">${formatTime(track.duration)}</div>
-        <button class="track-control cache" type="button" title="${offline ? "Remove from Offline list" : "Add to Offline list"}">${offline || mode === "offline" ? "▣" : "⇩"}</button>
-        <button class="track-control more" type="button" aria-label="Track options">•••</button>
-        <div class="more-menu">
-          <button type="button" data-action="add">＋ &nbsp; Add to playlist</button>
-          <button type="button" data-action="share">↗ &nbsp; Share</button>
-          ${mode === "offline"
-            ? `<button type="button" class="danger" data-action="offline">♲ &nbsp; Remove from Offline</button>`
-            : `<button type="button" data-action="edit">✎ &nbsp; Edit details</button><button type="button" class="danger" data-action="delete">♲ &nbsp; Delete</button>`}
-        </div>
-      `;
-
-      const activate = () => {
-        if (selectionMode && mode === "library") {
-          toggleSelected(track.id);
-        } else {
-          playTrack(track, list);
-        }
-      };
-
-      $(".art", row).addEventListener("click", activate);
-      $(".track-info", row).addEventListener("click", activate);
-      $(".track-info", row).addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          activate();
-        }
-      });
-
-      $(".more", row).addEventListener("click", event => {
-        event.stopPropagation();
-        $$(".more-menu.open").forEach(menu => menu.classList.remove("open"));
-        $(".more-menu", row).classList.toggle("open");
-      });
-
-      $(".cache", row).addEventListener("click", () => {
-        if (offline) {
-          localStorage.removeItem("pp-offline-" + track.id);
-          renderAll();
-          toast("Removed from Offline list.");
-        } else {
-          localStorage.setItem("pp-offline-" + track.id, "1");
-          renderAll();
-          toast("Added to Offline list. This is a list shortcut, not a downloaded audio copy.");
-        }
-      });
-
-      $(".more-menu", row).addEventListener("click", event => {
-        const action = event.target.closest("[data-action]")?.dataset.action;
-        if (!action) return;
-        $(".more-menu", row).classList.remove("open");
-
-        if (action === "add") addTrackToPlaylist(track.id);
-        if (action === "share") shareTrack(track);
-        if (action === "edit") editTrack(track);
-        if (action === "delete") deleteTracks([track.id]);
-        if (action === "offline") {
-          localStorage.removeItem("pp-offline-" + track.id);
-          renderAll();
-          toast("Removed from Offline list.");
-        }
-      });
-
-      container.appendChild(row);
-    });
-  }
-
-  function renderLibrary() {
-    const query = $("#librarySearch").value.trim().toLowerCase();
-    const visible = tracks.filter(track =>
-      `${track.title} ${track.artist || ""} ${track.album || ""}`.toLowerCase().includes(query)
-    );
-
-    renderTracks($("#libraryTracks"), visible, "library");
-    $("#libraryCount").textContent = `${tracks.length} ${tracks.length === 1 ? "track" : "tracks"}`;
-    $("#libraryTracks").style.display = tracks.length ? "" : "none";
-    $("#libraryEmpty").style.display = tracks.length ? "none" : "block";
-    $("#libraryEmpty").textContent = user ? "Your library is empty. Upload audio to get started." : "Sign in to load your library.";
-
-    $("#selectionBar").hidden = !selectionMode;
-    $("#selectionCount").textContent = `${selectedIds.size} selected`;
-    $("#deleteSelected").disabled = selectedIds.size === 0;
-    const allVisibleSelected = visible.length > 0 && visible.every(track => selectedIds.has(track.id));
-    $("#selectAllTracks").textContent = allVisibleSelected ? "Deselect all" : "Select all";
-  }
-
-  function renderOffline() {
-    const query = $("#offlineSearch").value.trim().toLowerCase();
-    const list = tracks.filter(track =>
-      localStorage.getItem("pp-offline-" + track.id) === "1" &&
-      `${track.title} ${track.artist || ""}`.toLowerCase().includes(query)
-    );
-    renderTracks($("#offlineTracks"), list, "offline");
-    $("#offlineTracks").style.display = list.length ? "" : "none";
-    $("#offlineEmpty").style.display = list.length ? "none" : "block";
-  }
-
-  function renderPlaylists() {
-    const grid = $("#playlistGrid");
-    grid.innerHTML = "";
-
-    playlists.forEach(playlist => {
-      const tile = document.createElement("button");
-      tile.type = "button";
-      tile.className = "playlist-tile";
-      const ids = playlist.trackIds || [];
-      tile.innerHTML = `<div class="playlist-art">♪</div><h3>${esc(playlist.name)}</h3><div class="muted">${ids.length} ${ids.length === 1 ? "track" : "tracks"}</div>`;
-      tile.addEventListener("click", () => openPlaylist(playlist.id));
-      grid.appendChild(tile);
-    });
-
-    if (!playlists.length) {
-      grid.innerHTML = `<p class="muted">No playlists yet. Create one to get started.</p>`;
-    }
-  }
-
-  function renderPlaylistDetail() {
-    const playlist = playlists.find(item => item.id === currentPlaylistId);
-    if (!playlist) return;
-
-    const list = (playlist.trackIds || [])
-      .map(id => tracks.find(track => track.id === id))
-      .filter(Boolean);
-
-    const seconds = list.reduce((sum, track) => sum + (Number(track.duration) || 0), 0);
-    $("#detailName").textContent = playlist.name;
-    $("#detailMeta").textContent =
-      `${list.length} ${list.length === 1 ? "track" : "tracks"} · ${formatPlaylistDuration(seconds)}`;
-
-    renderTracks($("#detailTracks"), list, "playlist");
-    $("#playlistEmpty").style.display = list.length ? "none" : "grid";
-  }
-
-  function renderAll() {
-    renderLibrary();
-    renderOffline();
-    renderPlaylists();
-    if (currentPlaylistId) renderPlaylistDetail();
-  }
-
-  function toggleSelected(id) {
-    selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
-    renderLibrary();
-  }
-
-  function setSelectionMode(enabled) {
-    selectionMode = enabled;
-    if (!enabled) selectedIds.clear();
-    renderLibrary();
-  }
-
-  async function playTrack(track, list=tracks) {
-    if (!track || !user) return;
-    currentTrackId = track.id;
-    playQueue = list.map(item => item.id);
-    setPlayerCollapsed(false);
-    $("#nowTitle").textContent = track.title;
-    $("#nowArtist").textContent = track.artist || "Unknown artist";
-    $("#duration").textContent = formatTime(track.duration);
-    $("#currentTime").textContent = "0:00";
-    renderAll();
-
-    try {
-      const url = await getSignedAudioUrl(track);
-      audio.src = url;
-      await audio.play();
-      $("#playPause").textContent = "Ⅱ";
-    } catch (error) {
-      toast("Could not play track: " + error.message);
-    }
-  }
-
-  async function deleteTracks(ids) {
-    if (!user || !ids.length) return;
-    if (!confirm(`Permanently delete ${ids.length} track${ids.length === 1 ? "" : "s"} from your library and Storage?`)) return;
-
-    const removing = tracks.filter(track => ids.includes(track.id));
-    const paths = removing.map(track => track.storage_path).filter(Boolean);
-
-    if (paths.length) {
-      const { error } = await supabase.storage.from(BUCKET).remove(paths);
-      if (error) {
-        toast("Storage delete failed: " + error.message);
-        return;
-      }
-    }
-
-    const { error } = await supabase.from("tracks").delete().in("id", ids);
-    if (error) {
-      toast("Track record delete failed: " + error.message);
-      return;
-    }
-
-    ids.forEach(id => localStorage.removeItem("pp-offline-" + id));
-    if (ids.includes(currentTrackId)) {
-      audio.pause();
-      audio.removeAttribute("src");
-      currentTrackId = null;
-      $("#nowTitle").textContent = "Nothing playing";
-      $("#nowArtist").textContent = "PantherPlay";
-      setPlayerCollapsed(true);
-    }
-
-    setSelectionMode(false);
-    await refreshData();
-    toast(`Deleted ${ids.length} track${ids.length === 1 ? "" : "s"}.`);
-  }
-
-  async function fixNames() {
-    if (!user) return;
-    let changed = 0;
-
-    for (const track of tracks) {
-      const title = track.title
-        .replace(/\.(mp3|m4a|wav|ogg|oga|opus|flac|aac|webm)$/i, "")
-        .replace(/[_]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      const artist = (track.artist || "Unknown artist").replace(/\s+/g, " ").trim() || "Unknown artist";
-      if (title === track.title && artist === track.artist) continue;
-
-      const { error } = await supabase.from("tracks")
-        .update({ title, artist })
-        .eq("id", track.id);
-
-      if (error) {
-        toast("Could not update track: " + error.message);
-        return;
-      }
-      changed++;
-    }
-
-    await refreshData();
-    toast(changed ? `Cleaned ${changed} track name${changed === 1 ? "" : "s"}.` : "Track names already look clean.");
-  }
-
-  async function scanExistingChecksums() {
-    const checksums = new Set();
-    const pageSize = 1000;
-
-    for (let from = 0; ; from += pageSize) {
-      const { data, error } = await supabase.from("tracks").select("checksum").range(from, from + pageSize - 1);
-      if (error) throw error;
-      (data || []).forEach(row => { if (row.checksum) checksums.add(row.checksum); });
-      if (!data || data.length < pageSize) break;
-    }
-
-    return checksums;
-  }
-
-  async function findLibraryDuplicates() {
-    if (!tracks.length) return toast("Your library is empty.");
-    const groups = new Map();
-
-    tracks.forEach(track => {
-      if (!track.checksum) return;
-      if (!groups.has(track.checksum)) groups.set(track.checksum, []);
-      groups.get(track.checksum).push(track);
-    });
-
-    const duplicateGroups = [...groups.values()].filter(group => group.length > 1);
-    if (!duplicateGroups.length) return toast("No exact duplicate tracks found.");
-
-    const extras = duplicateGroups.flatMap(group => group.slice(1));
-    showModal("Duplicate tracks", `
-      <p class="muted">Found ${extras.length} extra byte-identical track${extras.length === 1 ? "" : "s"}. The first copy in each group is kept. Checked copies will be permanently deleted.</p>
-      <div class="choice-list">
-        ${duplicateGroups.map((group, index) => `
-          <div class="upload-meta">
-            <strong>Group ${index + 1}</strong>
-            ${group.map((track, i) => `
-              <label class="choice">
-                <input type="checkbox" name="libraryDuplicate" value="${esc(track.id)}" ${i === 0 ? "disabled" : "checked"}>
-                <span>${i === 0 ? "KEEP" : "DELETE"} — ${esc(track.title)} <span class="muted">(${esc(track.artist || "Unknown artist")})</span></span>
-              </label>
-            `).join("")}
-          </div>
-        `).join("")}
-      </div>
-      <button class="button primary" id="deleteLibraryDuplicates" style="width:100%">Delete selected duplicates</button>
-    `);
-
-    $("#deleteLibraryDuplicates").addEventListener("click", async () => {
-      const ids = $$('input[name="libraryDuplicate"]:checked', $("#modalBody")).map(input => input.value);
-      if (!ids.length) return toast("Select duplicate copies to delete.");
-      closeModal();
-      await deleteTracks(ids);
-    });
-  }
-
-  async function readAudioDuration(file) {
-    return new Promise(resolve => {
-      const probe = new Audio();
-      const url = URL.createObjectURL(file);
-      const finish = value => {
-        URL.revokeObjectURL(url);
-        probe.removeAttribute("src");
-        resolve(Number.isFinite(value) && value > 0 ? value : 0);
-      };
-      probe.preload = "metadata";
-      probe.onloadedmetadata = () => finish(probe.duration);
-      probe.onerror = () => finish(0);
-      probe.src = url;
-    });
-  }
-
-  async function fixMissingDurations() {
-    if (!user) return;
-    const missing = tracks.filter(track => !Number(track.duration));
-    if (!missing.length) return toast("All track lengths are already available.");
-
-    showModal("Fix missing track lengths", `
-      <p class="muted" id="durationProgress">Checking ${missing.length} tracks. This reads audio metadata and may take a while.</p>
-      <button class="button" id="cancelDurationScan" style="width:100%;margin-top:12px">Close</button>
-    `);
-
-    let completed = 0;
-    for (const track of missing) {
-      if (!$("#durationProgress")) break;
-      try {
-        const url = await getSignedAudioUrl(track);
-        const duration = await readRemoteDuration(url);
-        if (duration > 0) {
-          const { error } = await supabase.from("tracks").update({ duration }).eq("id", track.id);
-          if (error) console.warn("Duration update failed:", error.message);
-          else track.duration = duration;
-        }
-      } catch (error) {
-        console.warn("Could not read duration:", track.title, error);
-      }
-      completed++;
-      const progress = $("#durationProgress");
-      if (progress) progress.textContent = `Checked ${completed} of ${missing.length} tracks…`;
-    }
-
-    closeModal();
-    renderAll();
-    toast("Finished checking missing track lengths.");
-  }
-
-  async function readRemoteDuration(url) {
-    return new Promise(resolve => {
-      const probe = new Audio();
-      const finish = duration => {
-        probe.removeAttribute("src");
-        resolve(Number.isFinite(duration) && duration > 0 ? duration : 0);
-      };
-      probe.preload = "metadata";
-      probe.onloadedmetadata = () => finish(probe.duration);
-      probe.onerror = () => finish(0);
-      probe.src = url;
-    });
-  }
-
-  function editTrack(track) {
-    showModal("Edit track details", `
-      <form id="editForm" method="post">
-        <input name="title" value="${esc(track.title)}" placeholder="Track title" required>
-        <input name="artist" value="${esc(track.artist || "")}" placeholder="Artist">
-        <input name="album" value="${esc(track.album || "")}" placeholder="Album">
-        <input name="genre" value="${esc(track.genre || "")}" placeholder="Genre">
-        <button class="button primary" style="width:100%;margin-top:10px">Save changes</button>
-      </form>
-    `);
-    $("#editForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      const data = new FormData(event.currentTarget);
-      const { error } = await supabase.from("tracks").update({
-        title: String(data.get("title")).trim(),
-        artist: String(data.get("artist")).trim() || "Unknown artist",
-        album: String(data.get("album")).trim(),
-        genre: String(data.get("genre")).trim()
-      }).eq("id", track.id);
-      if (error) return toast(error.message);
-      closeModal();
-      await refreshData();
-      toast("Track details updated.");
-    });
-  }
-
-  async function shareTrack(track) {
-    try {
-      await navigator.clipboard.writeText(`${track.title} — ${track.artist || "Unknown artist"}`);
-      toast("Track details copied.");
-    } catch {
-      toast(track.title);
-    }
-  }
-
-  function parentFolder(file) {
-    const path = file.webkitRelativePath || file._ppRelativePath || file.name;
-    const parts = path.split("/");
-    parts.pop();
-    return parts.join("/");
-  }
-
-  function isAudioFile(file) {
-    return /\.(mp3|m4a|wav|ogg|oga|opus|flac|aac|webm)$/i.test(file.name);
-  }
-
-  async function hashFile(file, progress) {
-    const existing = fileHashCache.get(file);
-    if (existing) return existing;
-
-    const promise = (async () => {
-      // Incremental SHA-256: only one chunk is held in memory at a time.
-      const { sha256 } = await import("https://esm.sh/@noble/hashes@1.8.0/sha2.js");
-      const hasher = sha256.create();
-
-      for (let offset = 0; offset < file.size; offset += HASH_CHUNK_BYTES) {
-        const end = Math.min(offset + HASH_CHUNK_BYTES, file.size);
-        hasher.update(new Uint8Array(await file.slice(offset, end).arrayBuffer()));
-        progress?.(end, file.size);
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
-
-      return [...hasher.digest()].map(byte => byte.toString(16).padStart(2, "0")).join("");
-    })();
-
-    fileHashCache.set(file, promise);
-    try {
-      return await promise;
-    } catch (error) {
-      fileHashCache.delete(file);
-      throw error;
-    }
-  }
-
-  function openUploadDialog() {
-    uploadQueue = [];
-    duplicateIds.clear();
-    duplicateReasons.clear();
-    duplicateScanComplete = false;
-    duplicateViewOnly = false;
-
-    showModal("Upload tracks", `
-      <div class="drop-zone" id="dropZone" role="button" tabindex="0">
-        <div><strong>⇧ Drop audio files or folders here</strong><span>or click to choose audio files — MP3, M4A, WAV, OGG, FLAC</span></div>
-      </div>
-      <input id="audioPicker" type="file" accept="audio/*,.flac,.opus" multiple hidden>
-      <div class="folder-prompt">
-        <div><strong>Adding a whole folder?</strong><div class="muted">Choose a folder to include nested folders and keep their paths.</div></div>
-        <button class="button" type="button" id="folderPickerButton">＋ Choose folder</button>
-      </div>
-      <input id="folderPicker" type="file" webkitdirectory directory multiple hidden>
-      <div id="uploadOptions" hidden>
-        <div class="mode-box">
-          <h3 id="folderCount">0 folders detected</h3>
-          <div class="mode-options">
-            <label><input type="radio" name="folderMode" value="playlists" checked><strong>Use folders as playlists</strong><div class="muted">One playlist per nested folder</div></label>
-            <label><input type="radio" name="folderMode" value="extract"><strong>Extract audio files</strong><div class="muted">Add tracks without making playlists</div></label>
-          </div>
-        </div>
-        <div class="metadata-fields">
-          <div class="field"><label for="uploadArtist">Artist</label><input id="uploadArtist" placeholder="Unknown artist"></div>
-          <div class="field"><label for="uploadAlbum">Album</label><input id="uploadAlbum" placeholder="Optional"></div>
-          <div class="field"><label for="uploadGenre">Genre</label><input id="uploadGenre" placeholder="Optional"></div>
-        </div>
-        <div class="queue-head">
-          <span class="queue-count" id="queueCount">0 FILES QUEUED</span>
-          <button class="button" type="button" id="findQueueDuplicates">Find duplicates</button>
-          <button class="button" type="button" id="toggleDuplicateView" disabled>Show duplicates</button>
-          <button class="button danger" type="button" id="removeDuplicateFiles" disabled>Remove duplicates</button>
-          <button class="button" type="button" id="clearQueue">Clear all</button>
-        </div>
-        <div class="queue" id="queueList"></div>
-        <div class="upload-meta muted" id="queueSummary"></div>
-        <button class="button primary" type="button" id="startUpload" style="width:100%;margin-top:12px">Upload selected files</button>
-      </div>
-    `, true);
-
-    const addFiles = files => {
-      let added = 0;
-      for (const file of files) {
-        if (!isAudioFile(file)) continue;
-        const path = file.webkitRelativePath || file._ppRelativePath || file.name;
-        if (uploadQueue.some(item => (item.webkitRelativePath || item._ppRelativePath || item.name) === path)) continue;
-        uploadQueue.push(file);
-        added++;
-      }
-      if (added) {
-        duplicateIds.clear();
-        duplicateReasons.clear();
-        duplicateScanComplete = false;
-        duplicateViewOnly = false;
-      }
-      renderUploadQueue();
-    };
-
-    $("#dropZone").addEventListener("click", () => $("#audioPicker").click());
-    $("#dropZone").addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") $("#audioPicker").click();
-    });
-    $("#audioPicker").addEventListener("change", event => addFiles([...event.target.files]));
-    $("#folderPickerButton").addEventListener("click", () => $("#folderPicker").click());
-    $("#folderPicker").addEventListener("change", event => addFiles([...event.target.files]));
-
-    const zone = $("#dropZone");
-    ["dragenter","dragover"].forEach(type => zone.addEventListener(type, event => {
-      event.preventDefault();
-      zone.classList.add("dragging");
-    }));
-    ["dragleave","drop"].forEach(type => zone.addEventListener(type, event => {
-      event.preventDefault();
-      zone.classList.remove("dragging");
-    }));
-    zone.addEventListener("drop", async event => {
-      const files = [];
-      for (const item of [...event.dataTransfer.items]) {
-        const entry = item.webkitGetAsEntry?.();
-        if (entry) await readDirectoryEntry(entry, files);
-        else if (item.getAsFile()) files.push(item.getAsFile());
-      }
-      addFiles(files);
-    });
-
-    $("#clearQueue").addEventListener("click", () => {
-      uploadQueue = [];
-      duplicateIds.clear();
-      duplicateReasons.clear();
-      duplicateScanComplete = false;
-      duplicateViewOnly = false;
-      renderUploadQueue();
-    });
-
-    $("#findQueueDuplicates").addEventListener("click", findQueuedDuplicates);
-    $("#toggleDuplicateView").addEventListener("click", () => {
-      duplicateViewOnly = !duplicateViewOnly;
-      renderUploadQueue();
-    });
-    $("#removeDuplicateFiles").addEventListener("click", () => {
-      if (!duplicateIds.size) return;
-      const count = duplicateIds.size;
-      uploadQueue = uploadQueue.filter((_, index) => !duplicateIds.has(index));
-      duplicateIds.clear();
-      duplicateReasons.clear();
-      duplicateScanComplete = false;
-      duplicateViewOnly = false;
-      renderUploadQueue();
-      toast(`Removed ${count} duplicate file${count === 1 ? "" : "s"} from the upload queue.`);
-    });
-    $("#startUpload").addEventListener("click", uploadQueued);
-  }
-
-  async function readDirectoryEntry(entry, output) {
-    if (entry.isFile) {
-      await new Promise(resolve => entry.file(file => {
-        try {
-          Object.defineProperty(file, "_ppRelativePath", { value: entry.fullPath.replace(/^\//, "") });
-        } catch {}
-        output.push(file);
-        resolve();
-      }, () => resolve()));
-      return;
-    }
-
-    if (entry.isDirectory) {
-      const reader = entry.createReader();
-      let batch;
-      do {
-        batch = await new Promise(resolve => reader.readEntries(resolve, () => resolve([])));
-        for (const child of batch) await readDirectoryEntry(child, output);
-      } while (batch.length);
-    }
-  }
-
-  function renderUploadQueue() {
-    if (!$("#uploadOptions")) return;
-
-    $("#uploadOptions").hidden = uploadQueue.length === 0;
-    const folders = new Set(uploadQueue.map(parentFolder).filter(Boolean));
-    $("#folderCount").textContent = `${folders.size} folder${folders.size === 1 ? "" : "s"} detected`;
-    $("#queueCount").textContent = `${uploadQueue.length} FILE${uploadQueue.length === 1 ? "" : "S"} QUEUED`;
-
-    const bytes = uploadQueue.reduce((sum, file) => sum + file.size, 0);
-    $("#queueSummary").textContent =
-      `${(bytes / 1024 / 1024).toFixed(1)} MB queued` +
-      (duplicateScanComplete ? ` · ${duplicateIds.size} duplicate(s) found` : " · Run Find duplicates to check this batch");
-
-    $("#toggleDuplicateView").disabled = !duplicateIds.size;
-    $("#toggleDuplicateView").textContent = duplicateViewOnly ? "Show all files" : "Show duplicates";
-    $("#removeDuplicateFiles").disabled = !duplicateIds.size;
-
-    const indexes = uploadQueue.map((_, index) => index)
-      .filter(index => !duplicateViewOnly || duplicateIds.has(index));
-
-    if (duplicateViewOnly && !indexes.length) {
-      $("#queueList").innerHTML = `<div class="muted">No duplicates in this upload queue.</div>`;
-      return;
-    }
-
-    $("#queueList").innerHTML = indexes.slice(0, 1000).map(index => {
-      const file = uploadQueue[index];
-      const duplicate = duplicateIds.has(index);
-      const reason = duplicateReasons.get(index) || "duplicate";
-      return `<div class="queue-item">
-        <div><strong>${esc(file.name)}${duplicate ? ` <span class="queue-status">— DUPLICATE</span>` : ""}</strong>
-          <small>${(file.size / 1024 / 1024).toFixed(1)} MB · ${esc(parentFolder(file) || "Selected files")}${duplicate ? ` · ${esc(reason)}` : ""}</small>
-        </div>
-        <button type="button" data-remove="${index}" aria-label="Remove file from queue">×</button>
-      </div>`;
-    }).join("") + (indexes.length > 1000 ? `<div class="muted">Showing the first 1,000 queued files.</div>` : "");
-
-    $$("[data-remove]", $("#queueList")).forEach(button => button.addEventListener("click", () => {
-      uploadQueue.splice(Number(button.dataset.remove), 1);
-      duplicateIds.clear();
-      duplicateReasons.clear();
-      duplicateScanComplete = false;
-      duplicateViewOnly = false;
-      renderUploadQueue();
-    }));
-  }
-
-  async function findQueuedDuplicates() {
-    if (!uploadQueue.length) return toast("Choose audio files or a folder first.");
-    if (!user) return toast("Sign in before checking duplicates against your library.");
-
-    const button = $("#findQueueDuplicates");
-    button.disabled = true;
-    button.textContent = "Scanning…";
-    duplicateIds.clear();
-    duplicateReasons.clear();
-    duplicateScanComplete = false;
-
-    try {
-      const libraryChecksums = await scanExistingChecksums();
-      const seen = new Set();
-
-      for (let index = 0; index < uploadQueue.length; index++) {
-        const file = uploadQueue[index];
-        const hash = await hashFile(file, (done, total) => {
-          const pct = total ? Math.floor(done / total * 100) : 100;
-          $("#queueSummary").textContent =
-            `Hashing file ${index + 1} of ${uploadQueue.length} (${pct}%): ${file.name}`;
-        });
-
-        if (libraryChecksums.has(hash)) {
-          duplicateIds.add(index);
-          duplicateReasons.set(index, "already in your library");
-        } else if (seen.has(hash)) {
-          duplicateIds.add(index);
-          duplicateReasons.set(index, "duplicate within this upload batch");
-        }
-
-        seen.add(hash);
-      }
-
-      duplicateScanComplete = true;
-      duplicateViewOnly = duplicateIds.size > 0;
-      renderUploadQueue();
-      toast(duplicateIds.size
-        ? `Found ${duplicateIds.size} duplicates. They are shown in the queue; remove them or upload anyway.`
-        : "No exact duplicates found.");
-    } catch (error) {
-      console.error("Duplicate scan failed:", error);
-      toast("Duplicate scan failed: " + error.message);
-    } finally {
-      button.disabled = false;
-      button.textContent = "Find duplicates";
-    }
-  }
-
-  function cleanTitle(filename) {
-    return filename.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim();
-  }
-
-  async function uploadQueued() {
-    if (!uploadQueue.length) return;
-    if (!user) return toast("Sign in before uploading.");
-
-    if (!duplicateScanComplete) {
-      await findQueuedDuplicates();
-      if (!duplicateScanComplete) return;
-    }
-
-    const files = [...uploadQueue];
-    const skip = new Set(duplicateIds);
-    const mode = $('input[name="folderMode"]:checked')?.value || "extract";
-    const artist = $("#uploadArtist").value.trim() || "Unknown artist";
-    const album = $("#uploadAlbum").value.trim();
-    const genre = $("#uploadGenre").value.trim();
-    const button = $("#startUpload");
-    button.disabled = true;
-
-    const folders = new Set(files.map(parentFolder).filter(Boolean));
-    const folderPlaylistIds = new Map();
-    const uploadedByFolder = new Map();
-    let uploadedCount = 0;
-    const errors = [];
-
-    try {
-      // Make one playlist per unique nested folder path, then attach successfully uploaded
-      // tracks to the playlist matching each file's parent folder.
-      if (mode === "playlists") {
-        for (const path of folders) {
-          const name = path.split("/").filter(Boolean).join(" / ");
-          const { data, error } = await supabase.from("playlists")
-            .insert({ user_id: user.id, name })
-            .select("id")
-            .single();
-
-          if (error) errors.push(`Playlist ${name}: ${error.message}`);
-          else folderPlaylistIds.set(path, data.id);
-        }
-      }
-
-      for (let index = 0; index < files.length; index++) {
-        if (skip.has(index)) continue;
-        const file = files[index];
-        button.textContent = `Preparing ${index + 1} of ${files.length}…`;
-
-        const checksum = await hashFile(file);
-        const duration = await readAudioDuration(file);
-        const extension = (file.name.match(/\.([a-z0-9]{2,8})$/i) || [])[1] || "audio";
-        const storagePath = `${user.id}/${crypto.randomUUID()}.${extension.toLowerCase()}`;
-
-        button.textContent = `Uploading ${index + 1} of ${files.length}…`;
-        const upload = await supabase.storage.from(BUCKET).upload(storagePath, file, {
-          contentType: file.type || "application/octet-stream",
-          upsert: false
-        });
-
-        if (upload.error) {
-          errors.push(`${file.name}: ${upload.error.message}`);
-          continue;
-        }
-
-        const folderPath = parentFolder(file);
-        const { data: track, error: insertError } = await supabase.from("tracks")
-          .insert({
-            user_id: user.id,
-            title: cleanTitle(file.name),
-            artist,
-            album,
-            genre,
-            storage_path: storagePath,
-            checksum,
-            size_bytes: file.size,
-            duration,
-            folder_path: folderPath
-          })
-          .select("*")
-          .single();
-
-        if (insertError) {
-          await supabase.storage.from(BUCKET).remove([storagePath]);
-          errors.push(`${file.name}: ${insertError.message}`);
-          continue;
-        }
-
-        uploadedCount++;
-        if (folderPlaylistIds.has(folderPath)) {
-          const playlistId = folderPlaylistIds.get(folderPath);
-          if (!uploadedByFolder.has(playlistId)) uploadedByFolder.set(playlistId, []);
-          uploadedByFolder.get(playlistId).push(track.id);
-        }
-      }
-
-      for (const [playlistId, ids] of uploadedByFolder) {
-        if (!ids.length) continue;
-        const { error } = await supabase.from("playlist_tracks").insert(
-          ids.map((trackId, position) => ({ playlist_id: playlistId, track_id: trackId, position }))
-        );
-        if (error) errors.push(`Could not add folder tracks to playlist: ${error.message}`);
-      }
-
-      await refreshData();
-      closeModal();
-
-      if (errors.length) {
-        console.error("Upload errors:", errors);
-        toast(`Uploaded ${uploadedCount}; ${errors.length} error(s). See browser console.`);
-      } else {
-        toast(`Uploaded ${uploadedCount}; skipped ${skip.size} duplicate(s).`);
-      }
-    } catch (error) {
-      console.error(error);
-      toast("Upload stopped: " + error.message);
-    } finally {
-      if (button.isConnected) {
-        button.disabled = false;
-        button.textContent = "Upload selected files";
-      }
-    }
-  }
-
-  async function openPlaylist(id) {
-    currentPlaylistId = id;
-    $("#playlistBrowser").hidden = true;
-    $("#playlistDetail").hidden = false;
-    renderPlaylistDetail();
-  }
-
-  function closePlaylist() {
-    currentPlaylistId = null;
-    $("#playlistBrowser").hidden = false;
-    $("#playlistDetail").hidden = true;
-  }
-
-  async function addTrackToPlaylist(trackId) {
-    if (!user) return showAuthModal();
-    if (!playlists.length) return toast("Create a playlist first.");
-
-    const activePlaylist = currentPlaylistId &&
-      $("#playlistsPage").classList.contains("active")
-      ? playlists.find(item => item.id === currentPlaylistId)
-      : null;
-
-    showAddTracksModal(trackId ? [trackId] : null, activePlaylist);
-  }
-
-  function showAddTracksModal(trackIds=null, targetPlaylist=null) {
-    const availableTracks = tracks.filter(track => !targetPlaylist || !(targetPlaylist.trackIds || []).includes(track.id));
-
-    showModal(targetPlaylist ? `Add tracks to ${targetPlaylist.name}` : "Add tracks to playlist", `
-      <form id="addTracksForm" method="post">
-        ${targetPlaylist
-          ? `<p class="muted">Selected playlist: <strong>${esc(targetPlaylist.name)}</strong></p>`
-          : `<div class="choice-list">${playlists.map(playlist => `
-              <label class="choice"><input type="checkbox" name="playlist" value="${esc(playlist.id)}"><span>${esc(playlist.name)}</span></label>
-            `).join("")}</div>`}
-        <div class="choice-list">${availableTracks.map(track => `
-          <label class="choice"><input type="checkbox" name="track" value="${esc(track.id)}" ${trackIds?.includes(track.id) ? "checked" : ""}><span>${esc(track.title)}</span></label>
-        `).join("")}</div>
-        <button class="button primary" style="width:100%">Add selected tracks</button>
-      </form>
-    `);
-
-    $("#addTracksForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const chosenTrackIds = $$('input[name="track"]:checked', form).map(input => input.value);
-      const playlistIds = targetPlaylist
-        ? [targetPlaylist.id]
-        : $$('input[name="playlist"]:checked', form).map(input => input.value);
-
-      if (!chosenTrackIds.length || !playlistIds.length) return toast("Select tracks and a playlist.");
-
-      for (const playlistId of playlistIds) {
-        const playlist = playlists.find(item => item.id === playlistId);
-        const existing = new Set(playlist?.trackIds || []);
-        const freshIds = chosenTrackIds.filter(id => !existing.has(id));
-        if (!freshIds.length) continue;
-
-        const { error } = await supabase.from("playlist_tracks").insert(
-          freshIds.map((trackId, index) => ({
-            playlist_id: playlistId,
-            track_id: trackId,
-            position: existing.size + index
-          }))
-        );
-
-        if (error) return toast(error.message);
-      }
-
-      closeModal();
-      await refreshData();
-      toast("Tracks added to playlist.");
-    });
-  }
-
-  function createPlaylistDialog() {
-    if (!user) return showAuthModal();
-
-    showModal("New playlist", `
-      <form id="newPlaylistForm" method="post">
-        <input name="name" maxlength="80" placeholder="Playlist name" required>
-        <button class="button primary" style="width:100%;margin-top:10px">Create playlist</button>
-      </form>
-    `);
-
-    $("#newPlaylistForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      const name = new FormData(event.currentTarget).get("name").trim();
-      if (!name) return;
-
-      const { error } = await supabase.from("playlists")
-        .insert({ user_id: user.id, name });
-
-      if (error) return toast(error.message);
-      closeModal();
-      await refreshData();
-      toast("Playlist created.");
-    });
-  }
-
-  async function deletePlaylist() {
-    const playlist = playlists.find(item => item.id === currentPlaylistId);
-    if (!playlist || !confirm(`Delete playlist "${playlist.name}"?`)) return;
-
-    const { error } = await supabase.from("playlists").delete().eq("id", playlist.id);
-    if (error) return toast(error.message);
-
-    closePlaylist();
-    await refreshData();
-    toast("Playlist deleted.");
-  }
-
-  function playlistQueue() {
-    const playlist = playlists.find(item => item.id === currentPlaylistId);
-    return (playlist?.trackIds || [])
-      .map(id => tracks.find(track => track.id === id))
-      .filter(Boolean);
-  }
-
-  function playPlaylist(shuffle=false) {
-    let list = playlistQueue();
-    if (!list.length) return toast("This playlist is empty.");
-
-    if (shuffle) {
-      list = [...list];
-      for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-      }
-    }
-
-    playTrack(list[0], list);
-  }
-
-  async function repairAllMissingDurations() {
-    if (!user) return;
-    const missing = tracks.filter(track => !Number(track.duration));
-    if (!missing.length) return toast("All track lengths are available.");
-
-    showModal("Fix missing lengths", `
-      <p class="muted" id="durationProgress">Checking ${missing.length} tracks. This reads audio metadata from Storage.</p>
-      <button class="button" id="closeDurationScan" style="width:100%;margin-top:12px">Close</button>
-    `);
-    $("#closeDurationScan").addEventListener("click", closeModal);
-
-    for (let i = 0; i < missing.length; i++) {
-      const progress = $("#durationProgress");
-      if (!progress) break;
-
-      progress.textContent = `Checking track ${i + 1} of ${missing.length}: ${missing[i].title}`;
-      try {
-        const url = await getSignedAudioUrl(missing[i]);
-        const duration = await readRemoteDuration(url);
-        if (duration > 0) {
-          const { error } = await supabase.from("tracks")
-            .update({ duration })
-            .eq("id", missing[i].id);
-          if (!error) missing[i].duration = duration;
-        }
-      } catch (error) {
-        console.warn("Unable to read duration:", missing[i].title, error);
-      }
-    }
-
-    if ($("#durationProgress")) {
-      closeModal();
-      renderAll();
-      toast("Finished checking missing track lengths.");
-    }
-  }
-
-  function readRemoteDuration(url) {
-    return new Promise(resolve => {
-      const probe = new Audio();
-      const done = duration => {
-        probe.removeAttribute("src");
-        resolve(Number.isFinite(duration) && duration > 0 ? duration : 0);
-      };
-      probe.preload = "metadata";
-      probe.onloadedmetadata = () => done(probe.duration);
-      probe.onerror = () => done(0);
-      probe.src = url;
-    });
-  }
-
-  // Navigation and page controls
-  $$(".nav button").forEach(button => button.addEventListener("click", () => {
-    $$(".nav button").forEach(item => item.classList.toggle("active", item === button));
-    $$(".page").forEach(page => page.classList.remove("active"));
-    $(`#${button.dataset.page}Page`).classList.add("active");
-    $("#tools").classList.remove("open");
-  }));
-
-  $("#librarySearch").addEventListener("input", renderLibrary);
-  $("#offlineSearch").addEventListener("input", renderOffline);
-
-  $("#actionsButton").addEventListener("click", event => {
-    event.stopPropagation();
-    $("#tools").classList.toggle("open");
-  });
-
-  $("#tools").addEventListener("click", async event => {
-    const tool = event.target.closest("[data-tool]")?.dataset.tool;
-    if (!tool) return;
-
-    $("#tools").classList.remove("open");
-    if (tool === "fix") await fixNames();
-    if (tool === "duplicates") await findLibraryDuplicates();
-    if (tool === "durations") await repairAllMissingDurations();
-    if (tool === "mass-delete") {
-      setSelectionMode(true);
-      toast("Click track artwork to select tracks, or Select all.");
-    }
-  });
-
-  $("#selectAllTracks").addEventListener("click", () => {
-    const query = $("#librarySearch").value.trim().toLowerCase();
-    const visible = tracks.filter(track =>
-      `${track.title} ${track.artist || ""} ${track.album || ""}`.toLowerCase().includes(query)
-    );
-    const allSelected = visible.length > 0 && visible.every(track => selectedIds.has(track.id));
-    visible.forEach(track => allSelected ? selectedIds.delete(track.id) : selectedIds.add(track.id));
-    renderLibrary();
-  });
-
-  $("#cancelSelection").addEventListener("click", () => setSelectionMode(false));
-  $("#deleteSelected").addEventListener("click", () => deleteTracks([...selectedIds]));
-  $("#uploadButton").addEventListener("click", async () => {
-    if (await requireUser()) openUploadDialog();
-  });
-  $("#newPlaylist").addEventListener("click", createPlaylistDialog);
-  $("#backPlaylists").addEventListener("click", closePlaylist);
-  $("#addPlaylistTracks").addEventListener("click", () => showAddTracksModal(null, playlists.find(item => item.id === currentPlaylistId)));
-  $("#emptyAddTracks").addEventListener("click", () => showAddTracksModal(null, playlists.find(item => item.id === currentPlaylistId)));
-  $("#deletePlaylist").addEventListener("click", deletePlaylist);
-  $("#playAll").addEventListener("click", () => playPlaylist(false));
-  $("#shufflePlaylist").addEventListener("click", () => playPlaylist(true));
-  $("#savePlaylistOffline").addEventListener("click", () => {
-    const playlist = playlists.find(item => item.id === currentPlaylistId);
-    (playlist?.trackIds || []).forEach(id => localStorage.setItem("pp-offline-" + id, "1"));
-    renderAll();
-    toast("Added playlist tracks to the Offline list. Audio is not downloaded for offline playback.");
-  });
-  $("#sharePlaylist").addEventListener("click", async () => {
-    const playlist = playlists.find(item => item.id === currentPlaylistId);
-    if (!playlist) return;
-    try {
-      await navigator.clipboard.writeText(playlist.name);
-      toast("Playlist name copied.");
-    } catch {
-      toast(playlist.name);
-    }
-  });
-
-  // Player controls
-  $("#playerToggle").addEventListener("click", () =>
-    setPlayerCollapsed(!$("#player").classList.contains("collapsed"))
-  );
-
-  $("#playPause").addEventListener("click", async () => {
-    if (!currentTrackId) return toast("Choose a track first.");
-    if (audio.paused) {
-      try {
-        await audio.play();
-        $("#playPause").textContent = "Ⅱ";
-      } catch (error) {
-        toast(error.message);
-      }
-    } else {
-      audio.pause();
-      $("#playPause").textContent = "▷";
-    }
-  });
-
-  function skipTrack(direction) {
-    if (!playQueue.length) return;
-    let index = playQueue.indexOf(currentTrackId);
-    index = (index + direction + playQueue.length) % playQueue.length;
-    const track = tracks.find(item => item.id === playQueue[index]);
-    if (track) playTrack(track, playQueue.map(id => tracks.find(item => item.id === id)).filter(Boolean));
-  }
-
-  $("#previous").addEventListener("click", () => skipTrack(-1));
-  $("#next").addEventListener("click", () => skipTrack(1));
-  audio.addEventListener("timeupdate", () => {
-    $("#currentTime").textContent = formatTime(audio.currentTime);
-    if (Number.isFinite(audio.duration)) {
-      $("#seek").max = audio.duration;
-      $("#seek").value = audio.currentTime;
-    }
-  });
-  audio.addEventListener("loadedmetadata", () => {
-    $("#duration").textContent = formatTime(audio.duration);
-  });
-  audio.addEventListener("ended", () => {
-    if (playQueue.length > 1) skipTrack(1);
-    else setPlayerCollapsed(true);
-  });
-  $("#seek").addEventListener("input", event => {
-    if (audio.src) audio.currentTime = Number(event.target.value);
-  });
-  $("#volume").addEventListener("input", event => { audio.volume = Number(event.target.value); });
-  $("#mute").addEventListener("click", () => {
-    audio.muted = !audio.muted;
-    $("#mute").textContent = audio.muted ? "◌" : "◖";
-  });
-
-  $("#accountButton").addEventListener("click", () => {
-    if (user) toast(user.email || "Signed in");
-    else showAuthModal();
-  });
-  $("#signOutButton").addEventListener("click", async () => {
-    if (!supabase) return showSetupNotice();
-    await supabase.auth.signOut();
-    user = null;
-    tracks = [];
-    playlists = [];
-    closePlaylist();
-    renderAll();
-    toast("Signed out.");
-  });
-
-  $("#modalClose").addEventListener("click", closeModal);
-  $("#modalBackdrop").addEventListener("click", event => {
-    if (event.target === $("#modalBackdrop")) closeModal();
-  });
-
-  document.addEventListener("click", event => {
-    if (!event.target.closest("#tools,#actionsButton")) $("#tools").classList.remove("open");
-    if (!event.target.closest(".more-menu,.more")) $$(".more-menu.open").forEach(menu => menu.classList.remove("open"));
-  });
-
-  if (supabase) {
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (error) return toast(error.message);
-      user = data.session?.user || null;
-      if (user) await refreshData();
-      else renderAll();
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      user = session?.user || null;
-      if (user) refreshData();
-      else {
-        tracks = [];
-        playlists = [];
-        renderAll();
-      }
-    });
-  } else {
-    renderAll();
-    $("#libraryEmpty").textContent = "Set your Supabase URL and publishable key in the CONFIG section to sign in.";
-  }
+"use strict";
+const SUPABASE_URL="https://tnccxiwnntsneshgvkxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_0VTQLxxbXYDt3jBeiUusgA_u7X9e16W";
+const BUCKET="audio";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)], audio=$("#audio");
+const configured=SUPABASE_URL.startsWith("https://")&&SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_");
+const sb=configured&&window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
+let user=null,tracks=[],playlists=[],currentPlaylist=null,currentTrack=null,queue=[],selectionMode=false;
+const selected=new Set();
+let uploadFiles=[],duplicates=new Set(),duplicateDone=false,duplicateReasons=new Map(),hashCache=new WeakMap(),toastTimer,db,offlineIds=new Set(),offlineUrls=new Map();
+const DB_NAME="PantherPlayOffline", STORE="audio", CHUNK=4*1024*1024;
+
+if(location.search&&/(?:email|password)=/i.test(location.search))history.replaceState(null,"",location.pathname+location.hash);
+function toast(msg){const n=$("#toast");n.textContent=msg;n.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>n.classList.remove("show"),3200)}
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function fmt(s){s=Number(s);return Number.isFinite(s)&&s>0?`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`:"—"}
+function collapse(v){$("#player").classList.toggle("collapsed",v)}
+function openModal(title,html,wide=false){$("#modalTitle").textContent=title;$("#modalBody").innerHTML=html;$("#modal").classList.toggle("wide",wide);$("#backdrop").classList.add("open")}
+function closeModal(){$("#backdrop").classList.remove("open");$("#modal").classList.remove("wide")}
+function openDb(){return new Promise((ok,no)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+function dbReq(mode,fn){return new Promise((ok,no)=>{const tx=db.transaction(STORE,mode),r=fn(tx.objectStore(STORE));r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function loadOffline(){try{const rows=await dbReq("readonly",s=>s.getAll());offlineIds=new Set(rows.map(x=>x.id))}catch(e){console.warn(e)}renderOffline()}
+async function getBlob(id){return dbReq("readonly",s=>s.get(id))}
+async function cacheTrack(track){
+ if(!user)return authModal();
+ if(offlineIds.has(track.id))return toast("Already cached.");
+ const button=document.querySelector(`[data-cache="${CSS.escape(track.id)}"]`);if(button){button.disabled=true;button.textContent="…"}
+ try{
+  const estimate=await navigator.storage?.estimate?.();
+  const free=estimate?estimate.quota-estimate.usage:Infinity;
+  if(track.size_bytes&&track.size_bytes>free)throw new Error("Not enough browser storage space.");
+  const {data,error}=await sb.storage.from(BUCKET).createSignedUrl(track.storage_path,3600);if(error)throw error;
+  const response=await fetch(data.signedUrl);if(!response.ok)throw new Error(`Download failed (${response.status}).`);
+  const blob=await response.blob();
+  await dbReq("readwrite",s=>s.put({id:track.id,blob,title:track.title,created:Date.now()}));
+  offlineIds.add(track.id);renderAll();toast("Audio cached for offline playback.");
+ }catch(e){toast("Cache failed: "+e.message)}
+ finally{if(button?.isConnected)button.disabled=false}
+}
+async function offload(id){await dbReq("readwrite",s=>s.delete(id));offlineIds.delete(id);const url=offlineUrls.get(id);if(url)URL.revokeObjectURL(url);offlineUrls.delete(id);renderAll();toast("Audio removed from this device.")}
+async function offloadEverything(){
+ if(!offlineIds.size)return toast("No cached audio to offload.");
+ if(!confirm(`Remove all ${offlineIds.size} cached audio files from this browser? This does not delete cloud tracks.`))return;
+ await dbReq("readwrite",s=>s.clear());
+ for(const url of offlineUrls.values())URL.revokeObjectURL(url);
+ offlineUrls.clear();offlineIds.clear();renderAll();toast("All cached audio offloaded.");
+}
+async function signedUrl(track){const {data,error}=await sb.storage.from(BUCKET).createSignedUrl(track.storage_path,3600);if(error)throw error;return data.signedUrl}
+async function play(track,list=tracks){
+ currentTrack=track.id;queue=list.map(x=>x.id);collapse(false);$("#nowTitle").textContent=track.title;$("#nowArtist").textContent=track.artist||"Unknown artist";$("#duration").textContent=fmt(track.duration);
+ try{
+  if(offlineIds.has(track.id)){let row=await getBlob(track.id);if(!row)offlineIds.delete(track.id);else{let url=offlineUrls.get(track.id);if(!url){url=URL.createObjectURL(row.blob);offlineUrls.set(track.id,url)}audio.src=url}}
+  if(!audio.src||!offlineIds.has(track.id))audio.src=await signedUrl(track);
+  await audio.play();$("#playPause").textContent="Ⅱ";renderAll();
+ }catch(e){toast("Playback failed: "+e.message)}
+}
+async function load(){
+ if(!user||!sb){tracks=[];playlists=[];renderAll();return}
+ const [t,p]=await Promise.all([sb.from("tracks").select("*").order("title"),sb.from("playlists").select("*").order("name")]);
+ if(t.error||p.error)return toast((t.error||p.error).message);
+ tracks=t.data||[];playlists=p.data||[];
+ const links=await sb.from("playlist_tracks").select("playlist_id,track_id,position").order("position");
+ if(links.error)return toast(links.error.message);
+ playlists.forEach(p=>p.trackIds=(links.data||[]).filter(x=>x.playlist_id===p.id).map(x=>x.track_id));
+ renderAll();
+}
+function renderTracks(root,list,mode="library"){
+ root.innerHTML="";
+ list.forEach(t=>{
+  const cached=offlineIds.has(t.id),row=document.createElement("article");
+  row.className="track-row"+(t.id===currentTrack?" selected":"")+(selected.has(t.id)?" selected":"");
+  row.innerHTML=`<button class="art" type="button">♪</button><div class="track-info" tabindex="0"><div class="track-title">${esc(t.title)}</div><div class="track-artist">${esc(t.artist||"Unknown artist")}</div></div><div class="duration">${fmt(t.duration)}</div><button class="track-control cache ${cached?"cached":""}" data-cache="${esc(t.id)}" title="${cached?"Remove cached audio":"Download for offline"}">${cached?"▣":"⇩"}</button><button class="track-control more">•••</button><div class="more-menu"><button data-act="add">＋ Add to playlist</button><button data-act="edit">✎ Edit details</button><button data-act="delete" class="danger">♲ Delete</button></div>`;
+  const activate=()=>{if(selectionMode&&mode==="library"){selected.has(t.id)?selected.delete(t.id):selected.add(t.id);renderLibrary()}else play(t,list)};
+  $(".art",row).onclick=activate;$(".track-info",row).onclick=activate;
+  $(".track-info",row).onkeydown=e=>{if(e.key==="Enter")activate()};
+  $(".cache",row).onclick=()=>cached?offload(t.id):cacheTrack(t);
+  $(".more",row).onclick=e=>{e.stopPropagation();$$(".more-menu.open").forEach(m=>m.classList.remove("open"));$(".more-menu",row).classList.toggle("open")};
+  $(".more-menu",row).onclick=e=>{const a=e.target.closest("[data-act]")?.dataset.act;if(a==="add")addTrack(t.id);if(a==="edit")editTrack(t);if(a==="delete")deleteTracks([t.id])};
+  root.appendChild(row);
+ });
+}
+function renderLibrary(){let q=$("#librarySearch").value.toLowerCase();let list=tracks.filter(t=>`${t.title} ${t.artist} ${t.album||""}`.toLowerCase().includes(q));renderTracks($("#libraryTracks"),list);$("#libraryCount").textContent=`${tracks.length} ${tracks.length===1?"track":"tracks"}`;$("#libraryEmpty").style.display=tracks.length?"none":"block";$("#libraryEmpty").textContent=user?"Your library is empty. Upload tracks to get started.":"Sign in to load your library.";$("#libraryTracks").style.display=tracks.length?"":"none";$("#selection").hidden=!selectionMode;$("#selectedCount").textContent=`${selected.size} selected`;$("#deleteSelected").disabled=!selected.size;$("#selectAll").textContent=list.length&&list.every(t=>selected.has(t.id))?"Deselect all":"Select all"}
+function renderOffline(){let q=$("#offlineSearch").value.toLowerCase();let list=tracks.filter(t=>offlineIds.has(t.id)&&`${t.title} ${t.artist}`.toLowerCase().includes(q));renderTracks($("#offlineTracks"),list,"offline");$("#offlineEmpty").style.display=list.length?"none":"grid";$("#offlineSummary").textContent=`${offlineIds.size} audio file${offlineIds.size===1?"":"s"} cached on this device`;$("#offloadAll").disabled=!offlineIds.size}
+function renderPlaylists(){const root=$("#playlistGrid");root.innerHTML="";playlists.forEach(p=>{const b=document.createElement("button");b.className="playlist-tile";b.innerHTML=`<div class="playlist-art">♪</div><h3>${esc(p.name)}</h3><div class="muted">${(p.trackIds||[]).length} tracks</div>`;b.onclick=()=>openPlaylist(p.id);root.appendChild(b)});if(!playlists.length)root.innerHTML='<p class="muted">No playlists yet.</p>'}
+function renderDetail(){const p=playlists.find(x=>x.id===currentPlaylist);if(!p)return;let list=(p.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);let secs=list.reduce((n,t)=>n+(Number(t.duration)||0),0);let mins=Math.round(secs/60);$("#detailName").textContent=p.name;$("#detailMeta").textContent=`${list.length} tracks · ${secs?mins+" min":"duration unavailable"}`;renderTracks($("#detailTracks"),list,"playlist");$("#playlistEmpty").style.display=list.length?"none":"grid"}
+function renderAll(){renderLibrary();renderOffline();renderPlaylists();if(currentPlaylist)renderDetail()}
+function openPlaylist(id){currentPlaylist=id;$("#playlistBrowser").hidden=true;$("#playlistDetail").hidden=false;renderDetail()}
+function closePlaylist(){currentPlaylist=null;$("#playlistBrowser").hidden=false;$("#playlistDetail").hidden=true}
+function authModal(){
+ if(!sb){openModal("Supabase setup","<p class='muted'>Set the project URL and publishable key in the file.</p>");return}
+ openModal("Sign in to PantherPlay",`<form id="authForm" method="post"><p class="muted">Sign in to sync your library.</p><input type="email" name="email" placeholder="Email" required autocomplete="username"><input type="password" name="password" placeholder="Password" required autocomplete="current-password"><button class="button primary" type="submit" style="width:100%">Sign in</button><button class="button" type="button" id="createAccount" style="width:100%;margin-top:8px">Create account</button></form>`);
+ $("#authForm").onsubmit=e=>{e.preventDefault();authSubmit(false)};$("#createAccount").onclick=()=>authSubmit(true)
+}
+async function authSubmit(create){let f=$("#authForm"),d=new FormData(f);let r=create?await sb.auth.signUp({email:d.get("email"),password:d.get("password")}):await sb.auth.signInWithPassword({email:d.get("email"),password:d.get("password")});if(r.error)return toast(r.error.message);if(create&&!r.data.session){closeModal();return toast("Check your email to confirm, then sign in.")}user=r.data.user;closeModal();await load();toast("Signed in.")}
+function openModal(title,html){$("#modalTitle").textContent=title;$("#modalBody").innerHTML=html;$("#backdrop").classList.add("open")}
+async function deleteTracks(ids){if(!user||!ids.length||!confirm(`Delete ${ids.length} track(s) from your library and cloud storage?`))return;let rows=tracks.filter(t=>ids.includes(t.id));let paths=rows.map(t=>t.storage_path).filter(Boolean);if(paths.length){let r=await sb.storage.from(BUCKET).remove(paths);if(r.error)return toast(r.error.message)}let r=await sb.from("tracks").delete().in("id",ids);if(r.error)return toast(r.error.message);for(const id of ids){await dbReq("readwrite",s=>s.delete(id)).catch(()=>{});offlineIds.delete(id)}selected.clear();selectionMode=false;await load();toast("Deleted selected tracks.")}
+async function fixNames(){for(const t of tracks){let title=t.title.replace(/\.(mp3|m4a|wav|ogg|flac|aac|opus|webm)$/i,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim();if(title!==t.title){let r=await sb.from("tracks").update({title}).eq("id",t.id);if(r.error)return toast(r.error.message)}}await load();toast("Track names cleaned.")}
+async function readDuration(file){return new Promise(resolve=>{let a=new Audio(),u=URL.createObjectURL(file),done=x=>{URL.revokeObjectURL(u);resolve(Number.isFinite(x)?x:0)};a.onloadedmetadata=()=>done(a.duration);a.onerror=()=>done(0);a.src=u})}
+async function hashFile(file,progress){if(hashCache.has(file))return hashCache.get(file);let promise=(async()=>{let {sha256}=await import("https://esm.sh/@noble/hashes@1.8.0/sha2.js"),h=sha256.create();for(let i=0;i<file.size;i+=CHUNK){let end=Math.min(i+CHUNK,file.size);h.update(new Uint8Array(await file.slice(i,end).arrayBuffer()));progress?.(end,file.size);await new Promise(r=>setTimeout(r,0))}return [...h.digest()].map(x=>x.toString(16).padStart(2,"0")).join("")})();hashCache.set(file,promise);return promise}
+async function scanLibraryHashes(){let hashes=new Set();for(let start=0;;start+=1000){let r=await sb.from("tracks").select("checksum").range(start,start+999);if(r.error)throw r.error;(r.data||[]).forEach(x=>x.checksum&&hashes.add(x.checksum));if(!r.data||r.data.length<1000)break}return hashes}
+function folderOf(f){let path=f.webkitRelativePath||f._ppPath||f.name;return path.split("/").slice(0,-1).join("/")}
+function audioFile(f){return /\.(mp3|m4a|wav|ogg|oga|opus|flac|aac|webm)$/i.test(f.name)}
+function uploadDialog(){
+ uploadFiles=[];duplicates.clear();duplicateReasons.clear();duplicateDone=false;
+ openModal("Upload tracks",`<div class="drop-zone" id="drop"> <div><strong>⇧ Drop audio files here</strong><span>or click to select files</span></div></div><input hidden id="files" type="file" accept="audio/*,.flac,.opus" multiple><div class="panel" style="display:flex;justify-content:space-between;align-items:center"><div><strong>Choose a folder</strong><div class="muted">Nested folders are included.</div></div><button class="button" id="chooseFolder">Choose folder</button></div><input hidden id="folderInput" type="file" webkitdirectory directory multiple><div id="uploadOpts" hidden><div class="panel"><div id="folderCount"></div><div class="mode-options"><label><input type="radio" name="mode" value="playlists" checked>Use folders as playlists</label><label><input type="radio" name="mode" value="extract">Extract audio files only</label></div></div><div class="fields"><label>Artist<input id="artist" placeholder="Unknown artist"></label><label>Album<input id="album" placeholder="Optional"></label><label>Genre<input id="genre" placeholder="Optional"></label></div><div class="queue-head"><span class="queue-count" id="queueCount"></span><button class="button" id="findDup">Find duplicates</button><button class="button" id="toggleDup" disabled>Show duplicates</button><button class="button danger" id="removeDup" disabled>Remove duplicates</button><button class="button" id="clearQueue">Clear</button></div><div class="queue" id="queue"></div><div class="panel muted" id="queueStatus"></div><button class="button primary" id="beginUpload" style="width:100%;margin-top:12px">Upload selected files</button></div>`,true);
+ const add=files=>{for(let f of files){if(audioFile(f)&&!uploadFiles.some(x=>(x.webkitRelativePath||x._ppPath||x.name)===(f.webkitRelativePath||f._ppPath||f.name)))uploadFiles.push(f)}duplicates.clear();duplicateDone=false;renderUploadQueue()};
+ $("#drop").onclick=()=>$("#files").click();$("#files").onchange=e=>add([...e.target.files]);$("#chooseFolder").onclick=()=>$("#folderInput").click();$("#folderInput").onchange=e=>add([...e.target.files]);
+ $("#drop").ondragover=e=>{e.preventDefault();$("#drop").style.background="#7c3aed33"};$("#drop").ondrop=e=>{e.preventDefault();add([...e.dataTransfer.files])};
+ $("#findDup").onclick=findUploadDuplicates;$("#toggleDup").onclick=()=>{uploadDialog.showDuplicates=!uploadDialog.showDuplicates;renderUploadQueue()};$("#removeDup").onclick=()=>{uploadFiles=uploadFiles.filter((_,i)=>!duplicates.has(i));duplicates.clear();duplicateDone=false;renderUploadQueue();toast("Duplicates removed from upload queue.")};$("#clearQueue").onclick=()=>{uploadFiles=[];duplicates.clear();duplicateDone=false;renderUploadQueue()};$("#beginUpload").onclick=uploadQueued;
+ uploadDialog.showDuplicates=false;renderUploadQueue()
+}
+function renderUploadQueue(){if(!$("#uploadOpts"))return;$("#uploadOpts").hidden=!uploadFiles.length;let folders=new Set(uploadFiles.map(folderOf).filter(Boolean));$("#folderCount").textContent=`${folders.size} folders detected`;$("#queueCount").textContent=`${uploadFiles.length} FILES QUEUED`;$("#toggleDup").disabled=!duplicates.size;$("#removeDup").disabled=!duplicates.size;$("#toggleDup").textContent=uploadDialog.showDuplicates?"Show all":"Show duplicates";let ids=uploadFiles.map((_,i)=>i).filter(i=>!uploadDialog.showDuplicates||duplicates.has(i));$("#queue").innerHTML=ids.length?ids.slice(0,500).map(i=>`<div class="queue-item"><div><strong>${esc(uploadFiles[i].name)}${duplicates.has(i)?" — DUPLICATE":""}</strong><small>${(uploadFiles[i].size/1048576).toFixed(1)} MB · ${esc(folderOf(uploadFiles[i])||"Selected files")}${duplicates.has(i)?" · "+esc(duplicateReasons.get(i)||"duplicate"):""}</small></div><button data-remove="${i}">×</button></div>`).join(""):'<div class="muted">No matching files.</div>';$$("[data-remove]",$("#queue")).forEach(b=>b.onclick=()=>{uploadFiles.splice(+b.dataset.remove,1);duplicates.clear();duplicateDone=false;renderUploadQueue()})}
+async function findUploadDuplicates(){if(!uploadFiles.length)return toast("Choose files first.");if(!user)return authModal();let b=$("#findDup");b.disabled=true;b.textContent="Scanning…";duplicates.clear();duplicateReasons.clear();try{let known=await scanLibraryHashes(),seen=new Set();for(let i=0;i<uploadFiles.length;i++){let f=uploadFiles[i],hash=await hashFile(f,(done,total)=>$("#queueStatus").textContent=`Hashing ${i+1}/${uploadFiles.length} · ${Math.floor(done/total*100)}% · ${f.name}`);if(known.has(hash)){duplicates.add(i);duplicateReasons.set(i,"already in library")}else if(seen.has(hash)){duplicates.add(i);duplicateReasons.set(i,"duplicate in this batch")}seen.add(hash)}duplicateDone=true;uploadDialog.showDuplicates=duplicates.size>0;renderUploadQueue();$("#queueStatus").textContent=`${duplicates.size} duplicate(s) found. Review the marked files, remove them, or upload anyway.`;toast(`${duplicates.size} duplicate(s) found.`)}catch(e){toast("Duplicate scan failed: "+e.message)}finally{b.disabled=false;b.textContent="Find duplicates"}}
+async function uploadQueued(){if(!user)return authModal();if(!uploadFiles.length)return;if(!duplicateDone){await findUploadDuplicates();if(!duplicateDone)return}let mode=$('input[name="mode"]:checked').value,artist=$("#artist").value.trim()||"Unknown artist",album=$("#album").value.trim(),genre=$("#genre").value.trim(),skipped=new Set(duplicates),playlistByFolder=new Map(),tracksByFolder=new Map(),errors=[];let button=$("#beginUpload");button.disabled=true;try{
+ if(mode==="playlists"){for(let path of new Set(uploadFiles.map(folderOf).filter(Boolean))){let r=await sb.from("playlists").insert({user_id:user.id,name:path.replaceAll("/"," / ")}).select("id").single();if(r.error)errors.push(r.error.message);else playlistByFolder.set(path,r.data.id)}}
+ let existingBytes=tracks.reduce((n,t)=>n+(Number(t.size_bytes)||0),0),selectedBytes=uploadFiles.reduce((n,f,i)=>n+(skipped.has(i)?0:f.size),0);$("#queueStatus").textContent=`Uploading ${(selectedBytes/1048576).toFixed(1)} MB. Supabase Storage quota applies across all batches.`;
+ for(let i=0;i<uploadFiles.length;i++){if(skipped.has(i))continue;let f=uploadFiles[i];button.textContent=`Uploading ${i+1} of ${uploadFiles.length}`;let checksum=await hashFile(f),duration=await readDuration(f),ext=(f.name.match(/\.([a-z0-9]{2,8})$/i)||[])[1]||"audio",path=`${user.id}/${crypto.randomUUID()}.${ext}`;let up=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type||"application/octet-stream"});if(up.error){errors.push(`${f.name}: ${up.error.message}`);continue}let folder=folderOf(f),ins=await sb.from("tracks").insert({user_id:user.id,title:f.name.replace(/\.[^.]+$/,"").replace(/_/g," "),artist,album,genre,storage_path:path,checksum,size_bytes:f.size,duration,folder_path:folder}).select("id").single();if(ins.error){await sb.storage.from(BUCKET).remove([path]);errors.push(ins.error.message);continue}let pid=playlistByFolder.get(folder);if(pid){if(!tracksByFolder.has(pid))tracksByFolder.set(pid,[]);tracksByFolder.get(pid).push(ins.data.id)}}
+ for(let [pid,ids] of tracksByFolder){let r=await sb.from("playlist_tracks").insert(ids.map((track_id,position)=>({playlist_id:pid,track_id,position})));if(r.error)errors.push(r.error.message)}
+ await load();closeModal();toast(errors.length?`Upload finished with ${errors.length} error(s). Check console.`:`Upload finished. Skipped ${skipped.size} duplicate(s).`);if(errors.length)console.error(errors)
+ }catch(e){toast("Upload failed: "+e.message)}finally{button.disabled=false;button.textContent="Upload selected files"}}
+
+let scheduleRunning=false;
+async function runDueSchedule(){if(scheduleRunning||!user)return;let job=JSON.parse(localStorage.getItem("pp-schedule")||"null");if(!job||Date.now()<job.when)return;scheduleRunning=true;localStorage.removeItem("pp-schedule");let list=job.target==="library"?tracks:(playlists.find(p=>p.id===job.target)?.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);toast(`Scheduled download started: ${list.length} tracks.`);for(let t of list){if(!offlineIds.has(t.id))await cacheTrack(t)}scheduleRunning=false;toast("Scheduled download finished.")}
+function addTrack(id){if(!user)return authModal();let target=currentPlaylist&&$("#playlistsPage").classList.contains("active")?playlists.find(p=>p.id===currentPlaylist):null;showAddDialog([id],target)}
+function showAddDialog(preset=null,target=null){openModal(target?`Add tracks to ${target.name}`:"Add tracks",`<form id="addForm">${target?`<p class="muted">Target playlist: ${esc(target.name)}</p>`:`<div class="choice-list">${playlists.map(p=>`<label class="choice"><input type="checkbox" name="pid" value="${p.id}">${esc(p.name)}</label>`).join("")}</div>`}<div class="choice-list">${tracks.map(t=>`<label class="choice"><input type="checkbox" name="tid" value="${t.id}" ${preset?.includes(t.id)?"checked":""} ${target?.trackIds?.includes(t.id)?"disabled":""}>${esc(t.title)}</label>`).join("")}</div><button class="button primary" style="width:100%">Add selected tracks</button></form>`);$("#addForm").onsubmit=async e=>{e.preventDefault();let pids=target?[target.id]:$$('input[name="pid"]:checked',e.currentTarget).map(x=>x.value),ids=$$('input[name="tid"]:checked',e.currentTarget).map(x=>x.value);if(!pids.length||!ids.length)return toast("Select tracks and a playlist.");for(let pid of pids){let p=playlists.find(x=>x.id===pid),fresh=ids.filter(id=>!p.trackIds.includes(id));if(fresh.length){let r=await sb.from("playlist_tracks").insert(fresh.map((track_id,i)=>({playlist_id:pid,track_id,position:p.trackIds.length+i})));if(r.error)return toast(r.error.message)}}closeModal();await load();toast("Tracks added.")}}
+async function makePlaylist(){if(!user)return authModal();openModal("New playlist",`<form id="newPlaylistForm"><input name="name" placeholder="Playlist name" required><button class="button primary" style="width:100%">Create playlist</button></form>`);$("#newPlaylistForm").onsubmit=async e=>{e.preventDefault();let name=new FormData(e.currentTarget).get("name").trim(),r=await sb.from("playlists").insert({user_id:user.id,name});if(r.error)return toast(r.error.message);closeModal();await load()}}
+async function playlistDelete(){let p=playlists.find(x=>x.id===currentPlaylist);if(!p||!confirm(`Delete ${p.name}?`))return;let r=await sb.from("playlists").delete().eq("id",p.id);if(r.error)return toast(r.error.message);currentPlaylist=null;$("#playlistBrowser").hidden=false;$("#playlistDetail").hidden=true;await load()}
+function playPlaylist(shuffle=false){let p=playlists.find(x=>x.id===currentPlaylist),list=(p?.trackIds||[]).map(id=>tracks.find(t=>t.id===id)).filter(Boolean);if(!list.length)return toast("Playlist is empty.");if(shuffle)for(let i=list.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]]}play(list[0],list)}
+async function fixMissingDurations(){let missing=tracks.filter(t=>!Number(t.duration));if(!missing.length)return toast("All lengths are available.");for(let i=0;i<missing.length;i++){toast(`Reading duration ${i+1}/${missing.length}`);try{let u=await signedUrl(missing[i]),d=await new Promise(resolve=>{let a=new Audio();a.onloadedmetadata=()=>resolve(a.duration);a.onerror=()=>resolve(0);a.src=u});if(d>0)await sb.from("tracks").update({duration:d}).eq("id",missing[i].id)}catch{}}await load();toast("Finished checking durations.")}
+$("#actionsButton").onclick=e=>{e.stopPropagation();$("#tools").classList.toggle("open")};
+$("#tools").onclick=async e=>{let a=e.target.closest("[data-tool]")?.dataset.tool;if(a==="fix")await fixNames();if(a==="duplicates")toast("Use Find duplicates in Upload tracks to compare a batch with your library.");if(a==="durations")await fixMissingDurations();if(a==="mass-delete"){selectionMode=true;renderLibrary();toast("Click artwork to select; Select all selects visible search results.")}};
+$("#selectAll").onclick=()=>{let q=$("#librarySearch").value.toLowerCase(),list=tracks.filter(t=>`${t.title} ${t.artist} ${t.album||""}`.toLowerCase().includes(q)),all=list.length&&list.every(t=>selected.has(t.id));list.forEach(t=>all?selected.delete(t.id):selected.add(t.id));renderLibrary()};
+$("#cancelSelect").onclick=()=>{selectionMode=false;selected.clear();renderLibrary()};$("#deleteSelected").onclick=()=>deleteTracks([...selected]);
+$("#uploadButton").onclick=()=>user?uploadDialog():authModal();$("#librarySearch").oninput=renderLibrary;$("#offlineSearch").oninput=renderOffline;
+$("#offloadAll").onclick=offloadEverything;
+$("#newPlaylist").onclick=makePlaylist;$("#backPlaylists").onclick=()=>{currentPlaylist=null;$("#playlistBrowser").hidden=false;$("#playlistDetail").hidden=true};
+$("#addPlaylistTracks").onclick=$("#emptyAdd").onclick=()=>showAddDialog(null,playlists.find(p=>p.id===currentPlaylist));
+$("#deletePlaylist").onclick=playlistDelete;$("#playAll").onclick=()=>playPlaylist(false);$("#shuffle").onclick=()=>playPlaylist(true);
+$("#savePlaylistOffline").onclick=async()=>{let p=playlists.find(x=>x.id===currentPlaylist);if(!p)return;for(let id of p.trackIds){let t=tracks.find(x=>x.id===id);if(t&&!offlineIds.has(id))await cacheTrack(t)}};
+$$(".nav button").forEach(b=>b.onclick=()=>{$$(".nav button").forEach(x=>x.classList.toggle("active",x===b));$$(".page").forEach(x=>x.classList.remove("active"));$(`#${b.dataset.page}Page`).classList.add("active")});
+$("#playerToggle").onclick=()=>collapse(!$("#player").classList.contains("collapsed"));
+$("#playPause").onclick=async()=>{if(!currentTrack)return toast("Choose a track first.");if(audio.paused){await audio.play();$("#playPause").textContent="Ⅱ"}else{audio.pause();$("#playPause").textContent="▷"}};
+function skip(dir){if(!queue.length)return;let i=(queue.indexOf(currentTrack)+dir+queue.length)%queue.length;let t=tracks.find(x=>x.id===queue[i]);if(t)play(t,queue.map(id=>tracks.find(x=>x.id===id)).filter(Boolean))}
+$("#next").onclick=()=>skip(1);$("#previous").onclick=()=>skip(-1);audio.ontimeupdate=()=>{$("#currentTime").textContent=fmt(audio.currentTime);if(Number.isFinite(audio.duration)){$("#seek").max=audio.duration;$("#seek").value=audio.currentTime}};audio.onloadedmetadata=()=>$("#duration").textContent=fmt(audio.duration);audio.onended=()=>queue.length>1?skip(1):collapse(true);$("#seek").oninput=e=>{if(audio.src)audio.currentTime=+e.target.value};$("#volume").oninput=e=>audio.volume=+e.target.value;$("#mute").onclick=()=>audio.muted=!audio.muted;
+$("#accountButton").onclick=()=>user?toast(user.email||"Signed in"):authModal();$("#signOut").onclick=async()=>{if(sb)await sb.auth.signOut();user=null;tracks=[];playlists=[];renderAll()};
+$("#modalClose").onclick=closeModal;$("#backdrop").onclick=e=>{if(e.target.id==="backdrop")closeModal()};document.addEventListener("click",e=>{if(!e.target.closest("#tools,#actionsButton"))$("#tools").classList.remove("open");if(!e.target.closest(".more-menu,.more"))$$(".more-menu.open").forEach(x=>x.classList.remove("open"))});
+(async()=>{try{db=await openDb();await loadOffline()}catch(e){toast("IndexedDB unavailable: "+e.message)}if(sb){const {data}=await sb.auth.getSession();user=data.session?.user||null;if(user)await load();sb.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;load()})}else{$("#libraryEmpty").textContent="Set your Supabase URL and publishable key in this file to sign in.";renderAll()}})();
 })();
 </script>
 </body>
